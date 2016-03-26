@@ -9,7 +9,6 @@ public class  Scheduler implements Runnable  {
 	Policy policy;
 	int quantum; 
 	int procID; 
-	Process processRunning; 
 	long startedProcess; 
 	
 	Queue<Integer> q = new LinkedList<Integer>();
@@ -94,11 +93,12 @@ public class  Scheduler implements Runnable  {
 	public void processAdded(int processID) {
 		
 		//get processId to a global scope - maybe this is not he right way to do this.
-		procID = processID;
+		//procID = processID;
 		
 		q.add(processID);
 		
 			if(noProcessRunning == true){
+				procID = q.peek();
 				processExecution.switchToProcess(q.remove()); 
 				startedProcess = System.currentTimeMillis();
 				noProcessRunning = false;
@@ -111,6 +111,7 @@ public class  Scheduler implements Runnable  {
 	public void processFinished(int processID) {
 		
 		if(!q.isEmpty()){
+			procID = q.peek();
 			processExecution.switchToProcess(q.remove());
 			startedProcess = System.currentTimeMillis();
 		}
@@ -122,19 +123,28 @@ public class  Scheduler implements Runnable  {
 	@Override
 	public void run() {
 		
+		int i = 0; 
+		
+		
+		while(i < 10){
+			
+			System.out.println("run:" + i);
+			
+			i++;
+			
 			try {
 				Thread.sleep(quantum);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 			//sofa aftur ef einhver hefur verið startað aftur, kannski ekki réttir útreiknignar
-			if(System.currentTimeMillis() - startedProcess > quantum){
+			/*if(System.currentTimeMillis() - startedProcess > quantum){
 				try {
 					Thread.sleep(quantum - startedProcess);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
-			}
+			}*/
 			
 			long elapsed = processExecution.getProcessInfo(procID).elapsedExecutionTime;
 			long totalNeeded = processExecution.getProcessInfo(procID).totalServiceTime;
@@ -156,6 +166,10 @@ public class  Scheduler implements Runnable  {
 			else{
 				noProcessRunning = true;
 			}
+			
+			
+		}
+		
 			
 			
 			
