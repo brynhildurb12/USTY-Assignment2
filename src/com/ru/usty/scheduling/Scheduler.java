@@ -138,13 +138,13 @@ public class  Scheduler implements Runnable  {
 				e.printStackTrace();
 			}
 			//sofa aftur ef einhver hefur verið startað aftur, kannski ekki réttir útreiknignar
-			/*if(System.currentTimeMillis() - startedProcess > quantum){
+			if(System.currentTimeMillis() - startedProcess > quantum){
 				try {
 					Thread.sleep(quantum - startedProcess);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
-			}*/
+			}
 			
 			long elapsed = processExecution.getProcessInfo(procID).elapsedExecutionTime;
 			long totalNeeded = processExecution.getProcessInfo(procID).totalServiceTime;
