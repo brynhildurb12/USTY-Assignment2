@@ -3,15 +3,15 @@ package com.ru.usty.scheduling;
 import com.ru.usty.scheduling.process.ProcessExecution;
 import java.util.*;
 
-public class Scheduler {
+public class  Scheduler implements Runnable  {
 
 	ProcessExecution processExecution;
 	Policy policy;
-	int quantum;
-
-	/**
-	 * Add any objects and variables here (if needed)
-	 */
+	int quantum; 
+	int procID; 
+	Process processRunning; 
+	long startedProcess; 
+	
 	Queue<Integer> q = new LinkedList<Integer>();
 	boolean noProcessRunning = true;
 
@@ -34,6 +34,7 @@ public class Scheduler {
 
 		this.policy = policy;
 		this.quantum = quantum;
+	
 
 		/**
 		 * Add general initialization code here (if needed)
@@ -45,12 +46,15 @@ public class Scheduler {
 			/**
 			 * Add your policy specific initialization code here (if needed)
 			 */
+		
 			break;
 		case RR:	//Round robin
 			System.out.println("Starting new scheduling task: Round robin, quantum = " + quantum);
-			/**
-			 * Add your policy specific initialization code here (if needed)
-			 */
+		
+			//starta þræði til að interrupta
+			Thread thread = new Thread(this);
+			thread.start();
+			
 			break;
 		case SPN:	//Shortest process next
 			System.out.println("Starting new scheduling task: Shortest process next");
@@ -88,34 +92,76 @@ public class Scheduler {
 	 * DO NOT CHANGE DEFINITION OF OPERATION
 	 */
 	public void processAdded(int processID) {
-
-		/**
-		 * Add scheduling code here
-		 */
+		
+		//get processId to a global scope - maybe this is not he right way to do this.
+		procID = processID;
+		
 		q.add(processID);
 		
-		if(noProcessRunning == true)
-		{
-			processExecution.switchToProcess(q.remove()); 
-			noProcessRunning = false;
-		}
+			if(noProcessRunning == true){
+				processExecution.switchToProcess(q.remove()); 
+				startedProcess = System.currentTimeMillis();
+				noProcessRunning = false;
+			}
 	}
 
 	/**
 	 * DO NOT CHANGE DEFINITION OF OPERATION
 	 */ 
 	public void processFinished(int processID) {
-
-		/**
-		 * Add scheduling code here
-		 */
-		if(!q.isEmpty())
-		{
+		
+		if(!q.isEmpty()){
 			processExecution.switchToProcess(q.remove());
+			startedProcess = System.currentTimeMillis();
 		}
-		else
-		{
+		else{
 			noProcessRunning = true;
 		}
 	}
+
+	@Override
+	public void run() {
+		
+			try {
+				Thread.sleep(quantum);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			//sofa aftur ef einhver hefur verið startað aftur, kannski ekki réttir útreiknignar
+			if(System.currentTimeMillis() - startedProcess > quantum){
+				try {
+					Thread.sleep(quantum - startedProcess);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+			
+			long elapsed = processExecution.getProcessInfo(procID).elapsedExecutionTime;
+			long totalNeeded = processExecution.getProcessInfo(procID).totalServiceTime;
+					
+			System.out.println(elapsed);
+			System.out.println(totalNeeded);
+			if(elapsed != totalNeeded){
+				processAdded(procID);
+				System.out.println("Add back to queue" + procID);
+			}
+			else{
+				processFinished(procID);
+			}
+			
+			if(!q.isEmpty()){
+				processExecution.switchToProcess(q.remove());
+				startedProcess = System.currentTimeMillis();
+			}
+			else{
+				noProcessRunning = true;
+			}
+			
+			
+			
+			
+			
+		}
+	
+	
 }
