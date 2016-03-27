@@ -11,7 +11,7 @@ public class  Scheduler implements Runnable  {
 	Policy policy;
 	int quantum; 
 	int procID; 
-	long startedProcess = System.currentTimeMillis(); 
+	long startedProcess; 
 	
 	Queue<Integer> q = new LinkedList<Integer>();
 	boolean noProcessRunning = true;
@@ -79,16 +79,12 @@ public class  Scheduler implements Runnable  {
 	 */
 	public void processAdded(int processID) {
 		
-		ProcessInfo info = processExecution.getProcessInfo(processID);
-		
-		
-		
 		q.add(processID);
 		
 		if(noProcessRunning == true){
 			procID = q.remove();
-			processExecution.switchToProcess(procID); 
 			startedProcess = System.currentTimeMillis();
+			processExecution.switchToProcess(procID); 
 			noProcessRunning = false;
 		}
 	}
@@ -100,8 +96,8 @@ public class  Scheduler implements Runnable  {
 		
 		if(!q.isEmpty()){
 			procID = q.remove();
-			processExecution.switchToProcess(procID);
 			startedProcess = System.currentTimeMillis();
+			processExecution.switchToProcess(procID);
 		}
 		else{
 			noProcessRunning = true;
@@ -129,13 +125,12 @@ public class  Scheduler implements Runnable  {
 		}
 		
 		q.add(procID);
-		System.out.println("Add back to queue" + procID);
 			
 			if(!q.isEmpty()){
 				
 				procID = q.remove();
-				processExecution.switchToProcess(procID);
 				startedProcess = System.currentTimeMillis();
+				processExecution.switchToProcess(procID);
 			}
 			else{
 				noProcessRunning = true;
