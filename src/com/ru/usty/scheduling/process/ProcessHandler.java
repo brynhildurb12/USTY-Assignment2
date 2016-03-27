@@ -63,6 +63,7 @@ public class ProcessHandler implements ProcessExecution {
  */
 
 	public ProcessInfo getProcessInfo(int processID) {
+		
 		Process process = processes.get(processID);
 		return new ProcessInfo(	process.getElapsedWaitingTime(),
 								process.getElapsedExecutionTime(),
