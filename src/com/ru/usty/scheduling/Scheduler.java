@@ -9,11 +9,10 @@ public class  Scheduler implements Runnable  {
 	Policy policy;
 	int quantum; 
 	int procID; 
-	long startedProcess; 
+	long startedProcess = System.currentTimeMillis(); 
 	
 	Queue<Integer> q = new LinkedList<Integer>();
 	boolean noProcessRunning = true;
-
 
 	/**
 	 * DO NOT CHANGE DEFINITION OF OPERATION
@@ -115,18 +114,22 @@ public class  Scheduler implements Runnable  {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			//sofa aftur ef einhver hefur verið startað aftur, kannski ekki réttir útreiknignar
-			/*if(System.currentTimeMillis() - startedProcess < quantum){
-				try {
-					Thread.sleep(quantum - startedProcess);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}*/
-			
-					
-			
 		
+		//sofa aftur ef einhver hefur verið startað aftur, kannski ekki réttir útreiknignar
+		
+			System.out.println(System.currentTimeMillis());
+			System.out.println(startedProcess);
+			long timenow = System.currentTimeMillis(); 
+			
+		if(timenow - startedProcess < quantum){
+			
+			try {
+				Thread.sleep(timenow - startedProcess);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+			
 		q.add(procID);
 		System.out.println("Add back to queue" + procID);
 			
@@ -141,5 +144,6 @@ public class  Scheduler implements Runnable  {
 			}
 		}	
 		
-	}}
+	}
+}
 
