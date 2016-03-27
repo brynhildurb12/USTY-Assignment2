@@ -1,20 +1,20 @@
 package com.ru.usty.scheduling;
 
 import com.ru.usty.scheduling.process.ProcessExecution;
+import com.ru.usty.scheduling.process.ProcessInfo;
+
 import java.util.*;
 
-public class Scheduler {
+public class  Scheduler implements Runnable  {
 
 	ProcessExecution processExecution;
 	Policy policy;
-	int quantum;
-
-	/**
-	 * Add any objects and variables here (if needed)
-	 */
+	int quantum; 
+	int procID; 
+	long startedProcess; 
+	
 	Queue<Integer> q = new LinkedList<Integer>();
 	boolean noProcessRunning = true;
-
 
 	/**
 	 * DO NOT CHANGE DEFINITION OF OPERATION
@@ -34,7 +34,7 @@ public class Scheduler {
 
 		this.policy = policy;
 		this.quantum = quantum;
-
+		
 		/**
 		 * Add general initialization code here (if needed)
 		 */
@@ -42,61 +42,49 @@ public class Scheduler {
 		switch(policy) {
 		case FCFS:	//First-come-first-served
 			System.out.println("Starting new scheduling task: First-come-first-served");
-			/**
-			 * Add your policy specific initialization code here (if needed)
-			 */
+			
 			break;
 		case RR:	//Round robin
 			System.out.println("Starting new scheduling task: Round robin, quantum = " + quantum);
-			/**
-			 * Add your policy specific initialization code here (if needed)
-			 */
+			
+			Thread thread = new Thread(this);
+			thread.start();
+			
 			break;
 		case SPN:	//Shortest process next
 			System.out.println("Starting new scheduling task: Shortest process next");
-			/**
-			 * Add your policy specific initialization code here (if needed)
-			 */
+			
 			break;
 		case SRT:	//Shortest remaining time
 			System.out.println("Starting new scheduling task: Shortest remaining time");
-			/**
-			 * Add your policy specific initialization code here (if needed)
-			 */
+			
 			break;
 		case HRRN:	//Highest response ratio next
 			System.out.println("Starting new scheduling task: Highest response ratio next");
-			/**
-			 * Add your policy specific initialization code here (if needed)
-			 */
+			
 			break;
 		case FB:	//Feedback
 			System.out.println("Starting new scheduling task: Feedback, quantum = " + quantum);
-			/**
-			 * Add your policy specific initialization code here (if needed)
-			 */
+			
 			break;
 		}
 
 		/**
 		 * Add general scheduling or initialization code here (if needed)
 		 */
-
 	}
 
 	/**
 	 * DO NOT CHANGE DEFINITION OF OPERATION
 	 */
 	public void processAdded(int processID) {
-
-		/**
-		 * Add scheduling code here
-		 */
+		
 		q.add(processID);
 		
-		if(noProcessRunning == true)
-		{
-			processExecution.switchToProcess(q.remove()); 
+		if(noProcessRunning == true){
+			procID = q.remove();
+			startedProcess = System.currentTimeMillis();
+			processExecution.switchToProcess(procID); 
 			noProcessRunning = false;
 		}
 	}
@@ -105,17 +93,53 @@ public class Scheduler {
 	 * DO NOT CHANGE DEFINITION OF OPERATION
 	 */ 
 	public void processFinished(int processID) {
-
-		/**
-		 * Add scheduling code here
-		 */
-		if(!q.isEmpty())
-		{
-			processExecution.switchToProcess(q.remove());
+		
+		if(!q.isEmpty()){
+			procID = q.remove();
+			startedProcess = System.currentTimeMillis();
+			processExecution.switchToProcess(procID);
 		}
-		else
-		{
+		else{
 			noProcessRunning = true;
 		}
 	}
+
+	@Override
+	public void run() {
+		
+		while(true){
+			try {
+				Thread.sleep(quantum);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		
+		//sofa aftur ef einhver hefur verið startað aftur
+		while(System.currentTimeMillis() - startedProcess < quantum){
+			
+			try {
+				Thread.sleep(System.currentTimeMillis() - startedProcess);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		q.add(procID);
+			
+			if(!q.isEmpty()){
+				
+				procID = q.remove();
+				startedProcess = System.currentTimeMillis();
+				processExecution.switchToProcess(procID);
+			}
+			else{
+				noProcessRunning = true;
+			}
+			
+			if(this.policy != Policy.RR){
+				return; 
+			}
+		}	
+	}
 }
+
