@@ -106,9 +106,7 @@ public class  Scheduler implements Runnable  {
 	@Override
 	public void run() {
 		
-		int i = 0; 
-		while(i < 60){
-			i++;
+		while(true){
 			try {
 				Thread.sleep(quantum);
 			} catch (InterruptedException e) {
@@ -116,15 +114,14 @@ public class  Scheduler implements Runnable  {
 			}
 		
 		//sofa aftur ef einhver hefur verið startað aftur, kannski ekki réttir útreiknignar
-		
-			System.out.println(System.currentTimeMillis());
-			System.out.println(startedProcess);
-			long timenow = System.currentTimeMillis(); 
+		System.out.println(System.currentTimeMillis());
+		System.out.println(startedProcess);
+		//long timenow = System.currentTimeMillis(); 
 			
-		if(timenow - startedProcess < quantum){
+		if(System.currentTimeMillis() - startedProcess < quantum){
 			
 			try {
-				Thread.sleep(timenow - startedProcess);
+				Thread.sleep(System.currentTimeMillis() - startedProcess);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -142,7 +139,13 @@ public class  Scheduler implements Runnable  {
 			else{
 				noProcessRunning = true;
 			}
+			
+			if(this.policy != Policy.RR){
+				return; 
+			}
+			
 		}	
+		
 		
 	}
 }
