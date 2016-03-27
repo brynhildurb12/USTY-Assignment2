@@ -33,8 +33,7 @@ public class  Scheduler implements Runnable  {
 
 		this.policy = policy;
 		this.quantum = quantum;
-	
-
+		
 		/**
 		 * Add general initialization code here (if needed)
 		 */
@@ -42,49 +41,36 @@ public class  Scheduler implements Runnable  {
 		switch(policy) {
 		case FCFS:	//First-come-first-served
 			System.out.println("Starting new scheduling task: First-come-first-served");
-			/**
-			 * Add your policy specific initialization code here (if needed)
-			 */
-		
+			
 			break;
 		case RR:	//Round robin
 			System.out.println("Starting new scheduling task: Round robin, quantum = " + quantum);
-		
-			//starta þræði til að interrupta
+			
 			Thread thread = new Thread(this);
 			thread.start();
 			
 			break;
 		case SPN:	//Shortest process next
 			System.out.println("Starting new scheduling task: Shortest process next");
-			/**
-			 * Add your policy specific initialization code here (if needed)
-			 */
+			
 			break;
 		case SRT:	//Shortest remaining time
 			System.out.println("Starting new scheduling task: Shortest remaining time");
-			/**
-			 * Add your policy specific initialization code here (if needed)
-			 */
+			
 			break;
 		case HRRN:	//Highest response ratio next
 			System.out.println("Starting new scheduling task: Highest response ratio next");
-			/**
-			 * Add your policy specific initialization code here (if needed)
-			 */
+			
 			break;
 		case FB:	//Feedback
 			System.out.println("Starting new scheduling task: Feedback, quantum = " + quantum);
-			/**
-			 * Add your policy specific initialization code here (if needed)
-			 */
+			
 			break;
 		}
 
 		/**
 		 * Add general scheduling or initialization code here (if needed)
 		 */
-
 	}
 
 	/**
@@ -92,17 +78,15 @@ public class  Scheduler implements Runnable  {
 	 */
 	public void processAdded(int processID) {
 		
-		//get processId to a global scope - maybe this is not he right way to do this.
-		//procID = processID;
-		
 		q.add(processID);
 		
-			if(noProcessRunning == true){
-				procID = q.peek();
-				processExecution.switchToProcess(q.remove()); 
-				startedProcess = System.currentTimeMillis();
-				noProcessRunning = false;
-			}
+		if(noProcessRunning == true){
+			
+			procID = q.remove();
+			processExecution.switchToProcess(procID); 
+			startedProcess = System.currentTimeMillis();
+			noProcessRunning = false;
+		}
 	}
 
 	/**
@@ -111,8 +95,8 @@ public class  Scheduler implements Runnable  {
 	public void processFinished(int processID) {
 		
 		if(!q.isEmpty()){
-			procID = q.peek();
-			processExecution.switchToProcess(q.remove());
+			procID = q.remove();
+			processExecution.switchToProcess(procID);
 			startedProcess = System.currentTimeMillis();
 		}
 		else{
@@ -124,58 +108,38 @@ public class  Scheduler implements Runnable  {
 	public void run() {
 		
 		int i = 0; 
-		
-		
-		while(i < 10){
-			
-			System.out.println("run:" + i);
-			
+		while(i < 60){
 			i++;
-			
 			try {
 				Thread.sleep(quantum);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 			//sofa aftur ef einhver hefur verið startað aftur, kannski ekki réttir útreiknignar
-			if(System.currentTimeMillis() - startedProcess > quantum){
+			/*if(System.currentTimeMillis() - startedProcess < quantum){
 				try {
 					Thread.sleep(quantum - startedProcess);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
-			}
+			}*/
 			
-			long elapsed = processExecution.getProcessInfo(procID).elapsedExecutionTime;
-			long totalNeeded = processExecution.getProcessInfo(procID).totalServiceTime;
 					
-			System.out.println(elapsed);
-			System.out.println(totalNeeded);
-			if(elapsed != totalNeeded){
-				processAdded(procID);
-				System.out.println("Add back to queue" + procID);
-			}
-			else{
-				processFinished(procID);
-			}
+			
+		
+		q.add(procID);
+		System.out.println("Add back to queue" + procID);
 			
 			if(!q.isEmpty()){
-				processExecution.switchToProcess(q.remove());
+				
+				procID = q.remove();
+				processExecution.switchToProcess(procID);
 				startedProcess = System.currentTimeMillis();
 			}
 			else{
 				noProcessRunning = true;
 			}
-			
-			
-		}
+		}	
 		
-			
-			
-			
-			
-			
-		}
-	
-	
-}
+	}}
+
