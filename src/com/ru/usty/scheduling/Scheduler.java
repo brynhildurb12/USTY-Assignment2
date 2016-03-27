@@ -1,6 +1,8 @@
 package com.ru.usty.scheduling;
 
 import com.ru.usty.scheduling.process.ProcessExecution;
+import com.ru.usty.scheduling.process.ProcessInfo;
+
 import java.util.*;
 
 public class  Scheduler implements Runnable  {
@@ -77,10 +79,13 @@ public class  Scheduler implements Runnable  {
 	 */
 	public void processAdded(int processID) {
 		
+		ProcessInfo info = processExecution.getProcessInfo(processID);
+		
+		
+		
 		q.add(processID);
 		
 		if(noProcessRunning == true){
-			
 			procID = q.remove();
 			processExecution.switchToProcess(procID); 
 			startedProcess = System.currentTimeMillis();
@@ -113,11 +118,7 @@ public class  Scheduler implements Runnable  {
 				e.printStackTrace();
 			}
 		
-		//sofa aftur ef einhver hefur verið startað aftur, kannski ekki réttir útreiknignar
-		//System.out.println(System.currentTimeMillis());
-		//System.out.println(startedProcess);
-		//long timenow = System.currentTimeMillis(); 
-			
+		//sofa aftur ef einhver hefur verið startað aftur
 		while(System.currentTimeMillis() - startedProcess < quantum){
 			
 			try {
@@ -143,10 +144,7 @@ public class  Scheduler implements Runnable  {
 			if(this.policy != Policy.RR){
 				return; 
 			}
-			
 		}	
-		
-		
 	}
 }
 
