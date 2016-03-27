@@ -114,11 +114,11 @@ public class  Scheduler implements Runnable  {
 			}
 		
 		//sofa aftur ef einhver hefur verið startað aftur, kannski ekki réttir útreiknignar
-		System.out.println(System.currentTimeMillis());
-		System.out.println(startedProcess);
+		//System.out.println(System.currentTimeMillis());
+		//System.out.println(startedProcess);
 		//long timenow = System.currentTimeMillis(); 
 			
-		if(System.currentTimeMillis() - startedProcess < quantum){
+		while(System.currentTimeMillis() - startedProcess < quantum){
 			
 			try {
 				Thread.sleep(System.currentTimeMillis() - startedProcess);
@@ -126,7 +126,7 @@ public class  Scheduler implements Runnable  {
 				e.printStackTrace();
 			}
 		}
-			
+		
 		q.add(procID);
 		System.out.println("Add back to queue" + procID);
 			
