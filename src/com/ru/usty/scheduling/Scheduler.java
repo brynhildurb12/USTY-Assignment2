@@ -21,10 +21,10 @@ public class  Scheduler implements Runnable  {
 		@Override
 		public int compare(ProcessOnQueue p1, ProcessOnQueue p2){
 			
-			if(p1.totalService < p2.totalService){
+			if(p1.totalService > p2.totalService){
 				return -1;
 			}
-			if(p1.totalService > p2.totalService){
+			if(p1.totalService < p2.totalService){
 				return 1;
 			}
 			return 0;
@@ -36,10 +36,10 @@ public class  Scheduler implements Runnable  {
 		@Override
 		public int compare(ProcessOnQueue p1, ProcessOnQueue p2){
 			
-			if((p1.totalService - p1.executing) < (p2.totalService - p2.executing)){
+			if((p1.totalService - p1.executing) > (p2.totalService - p2.executing)){
 				return -1;
 			}
-			if((p1.totalService - p1.executing) > (p2.totalService - p2.executing)){
+			if((p1.totalService - p1.executing) < (p2.totalService - p2.executing)){
 				return 1;
 			}
 			return 0;
@@ -139,57 +139,64 @@ public class  Scheduler implements Runnable  {
 			process.processID = processID;
 			process.totalService = info.totalServiceTime;
 			
-			queue.add(process);
 			
-				if(noProcessRunning == true){
+			
+			if(noProcessRunning == true){
+				queue.add(process);
 				processOut = queue.remove();
 				processExecution.switchToProcess(processOut.processID); 
 				noProcessRunning = false;
 			}
-			
+			else{
+				queue.add(process);
+			}
+		
 			break;	
 			
 		case SRT:
 			
 			ProcessInfo infoAdd = processExecution.getProcessInfo(processID);
-			ProcessOnQueue processAdd = new ProcessOnQueue();
-			processAdd.processID = processID;
-			processAdd.totalService = infoAdd.totalServiceTime;
-			processAdd.totalService = infoAdd.elapsedExecutionTime;
 			
-			//ef engin að keyra þá öddum við honum og setjum af stað
+			ProcessOnQueue processAdding = new ProcessOnQueue();
+			
+			processAdding.processID = processID;
+			processAdding.totalService = infoAdd.totalServiceTime;
+			processAdding.totalService = infoAdd.elapsedExecutionTime;
+			
+			
 			if(noProcessRunning == true){
-				processOut = processAdd;
+				queueSRT.add(processAdding);
+				processOut = queueSRT.remove();
 				processExecution.switchToProcess(processOut.processID); 
 				noProcessRunning = false;
-				
 			}
-			//annars athugum við á keyrandi process
-			else {
+			else{
+				
 				
 				ProcessInfo infoRun = processExecution.getProcessInfo(processOut.processID);
-				ProcessOnQueue processStopped = new ProcessOnQueue();
-				processStopped.processID = processOut.processID;
-				processStopped.executing = infoRun.elapsedExecutionTime;
-				processStopped.totalService = infoRun.totalServiceTime;
+				System.out.println("Running: " + (infoRun.totalServiceTime - infoRun.elapsedExecutionTime));
+				System.out.println("Adding: " + (infoAdd.totalServiceTime - infoAdd.elapsedExecutionTime));
 				
-				if((infoAdd.totalServiceTime - infoAdd.elapsedExecutionTime) < (infoRun.totalServiceTime - infoRun.elapsedExecutionTime)){
+				if((infoRun.totalServiceTime - infoRun.elapsedExecutionTime) > (infoAdd.totalServiceTime - infoAdd.elapsedExecutionTime)){
+					System.out.println("Swissa");
 					
-					processOut = processAdd;
-					processExecution.switchToProcess(processOut.processID);
+					ProcessOnQueue processStopped = new ProcessOnQueue();
+					processStopped.processID = processID;
+					processStopped.totalService = infoAdd.totalServiceTime;
+					processStopped.totalService = infoAdd.elapsedExecutionTime;
 					queueSRT.add(processStopped);
+					processOut = processAdding;
+					processExecution.switchToProcess(processOut.processID);
 					
 				}
+				
 				else{
-					queueSRT.add(processAdd);
+					queueSRT.add(processAdding);
 					
-					if(noProcessRunning == true){
-						processOut = queueSRT.remove();
-						processExecution.switchToProcess(processAdd.processID); 
-						noProcessRunning = false;
-					}
 				}
+				
 			}
+			break;	
 			
 		default:
 			break;
@@ -232,7 +239,7 @@ public class  Scheduler implements Runnable  {
 			}
 			break;
 		case SRT:
-			if(!queue.isEmpty()){
+			if(!queueSRT.isEmpty()){
 				processOut = queueSRT.remove();
 				processExecution.switchToProcess(processOut.processID);
 			}
