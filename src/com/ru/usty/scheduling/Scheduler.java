@@ -132,23 +132,19 @@ public class  Scheduler implements Runnable  {
 			break;
 		case SPN:
 			
-			ProcessInfo info = processExecution.getProcessInfo(processID);
+ProcessInfo info = processExecution.getProcessInfo(processID);
 			
 			ProcessOnQueue process = new ProcessOnQueue();
 			
 			process.processID = processID;
 			process.totalService = info.totalServiceTime;
 			
+			queue.add(process);
 			
-			
-			if(noProcessRunning == true){
-				queue.add(process);
+				if(noProcessRunning == true){
 				processOut = queue.remove();
 				processExecution.switchToProcess(processOut.processID); 
 				noProcessRunning = false;
-			}
-			else{
-				queue.add(process);
 			}
 		
 			break;	
