@@ -5,15 +5,26 @@ import com.ru.usty.scheduling.process.ProcessInfo;
 
 import java.util.*;
 
-public class  Scheduler implements Runnable  {
+public class Scheduler implements Runnable  {
 
 	ProcessExecution processExecution;
 	Policy policy;
-	int quantum; 
+	int quantum;
 	int procID; 
+	//long FCFSRespone = 0; 
+	//int FCFSCount = 0; 
+	//long AverageFCFS = 0; 
 	ProcessOnQueue processOut;
 	long startedProcess; 
 	boolean noProcessRunning = true;
+	//Seven queues for FeedBack
+	Queue<ProcessOnQueue> q0 = new LinkedList<ProcessOnQueue>();
+	Queue<ProcessOnQueue> q1 = new LinkedList<ProcessOnQueue>();
+	Queue<ProcessOnQueue> q2 = new LinkedList<ProcessOnQueue>();
+	Queue<ProcessOnQueue> q3 = new LinkedList<ProcessOnQueue>();
+	Queue<ProcessOnQueue> q4 = new LinkedList<ProcessOnQueue>();
+	Queue<ProcessOnQueue> q5 = new LinkedList<ProcessOnQueue>();
+	Queue<ProcessOnQueue> q6 = new LinkedList<ProcessOnQueue>();
 	
 	Queue<Integer> q = new LinkedList<Integer>();
 	PriorityQueue<ProcessOnQueue> queue = new PriorityQueue<ProcessOnQueue>(10, new Comparator<ProcessOnQueue>(){
@@ -110,7 +121,8 @@ public class  Scheduler implements Runnable  {
 			break;
 		case FB:	//Feedback
 			System.out.println("Starting new scheduling task: Feedback, quantum = " + quantum);
-			
+			Thread threadFB = new Thread(this);
+			threadFB.start();
 			break;
 		}
 
@@ -149,12 +161,9 @@ public class  Scheduler implements Runnable  {
 		case SPN:
 			
 			ProcessInfo info = processExecution.getProcessInfo(processID);
-			
 			ProcessOnQueue process = new ProcessOnQueue();
-			
 			process.processID = processID;
 			process.totalService = info.totalServiceTime;
-			
 			
 				if(noProcessRunning == true){
 					queue.add(process);
@@ -171,9 +180,7 @@ public class  Scheduler implements Runnable  {
 		case SRT:
 			
 			ProcessInfo infoAdd = processExecution.getProcessInfo(processID);
-			
 			ProcessOnQueue processAdding = new ProcessOnQueue();
-			
 			processAdding.processID = processID;
 			processAdding.totalService = infoAdd.totalServiceTime;
 			processAdding.executing = infoAdd.elapsedExecutionTime;
@@ -211,9 +218,7 @@ public class  Scheduler implements Runnable  {
 		case HRRN:
 			
 			ProcessInfo infoAdding = processExecution.getProcessInfo(processID);
-			
 			ProcessOnQueue processAdd = new ProcessOnQueue();
-			
 			processAdd.processID = processID;
 			processAdd.totalService = infoAdding.totalServiceTime;
 			processAdd.waitingTime = infoAdding.elapsedWaitingTime;
@@ -228,6 +233,23 @@ public class  Scheduler implements Runnable  {
 			
 						
 		break;	
+		case FB:
+			
+			ProcessOnQueue firstTime = new ProcessOnQueue();
+			
+			firstTime.processID = processID;
+			firstTime.lastQueue = 0; 
+		
+			q0.add(firstTime);
+			
+			if(noProcessRunning == true){
+				processOut = q0.remove();
+				startedProcess = System.currentTimeMillis();
+				processExecution.switchToProcess(processOut.processID); 
+				noProcessRunning = false;
+			}
+			break;
+			
 		default:
 			break;
 		}
@@ -240,6 +262,15 @@ public class  Scheduler implements Runnable  {
 		
 		switch(this.policy) {
 		case FCFS:	
+			
+			//ProcessInfo infoFCFS = processExecution.getProcessInfo(processID);
+			
+			//FCFSRespone += infoFCFS.elapsedWaitingTime;
+			//FCFSCount++;
+			//AverageFCFS = FCFSRespone/FCFSCount;
+			
+			//System.out.println(AverageFCFS);
+					
 			if(!q.isEmpty()){
 				procID = q.remove();
 				startedProcess = System.currentTimeMillis();
@@ -250,8 +281,8 @@ public class  Scheduler implements Runnable  {
 			}
 			break;
 		case RR:
-			System.out.println("Process finished: " + procID);
-			
+			//System.out.println("Process finished: " + procID);
+					
 			if(!q.isEmpty()){
 				procID = q.remove();
 				startedProcess = System.currentTimeMillis();
@@ -289,6 +320,63 @@ public class  Scheduler implements Runnable  {
 				noProcessRunning = true;
 			}
 			break;
+		case FB:
+				//System.out.println("remove");
+				if(!q0.isEmpty()){
+					System.out.println("remove");
+					processOut = q0.remove();
+					processOut.lastQueue = 0;
+					startedProcess = System.currentTimeMillis();
+					processExecution.switchToProcess(processOut.processID);
+				}
+				else if(!q1.isEmpty()){
+					
+					processOut = q1.remove();
+					processOut.lastQueue = 1;
+					startedProcess = System.currentTimeMillis();
+					processExecution.switchToProcess(processOut.processID);
+				}
+				else if(!q2.isEmpty()){
+					processOut = q2.remove();
+					processOut.lastQueue = 2; 
+					startedProcess = System.currentTimeMillis();
+					processExecution.switchToProcess(processOut.processID);
+
+				}
+				else if(!q3.isEmpty()){
+					processOut = q3.remove();
+					processOut.lastQueue = 3;
+					startedProcess = System.currentTimeMillis();
+					processExecution.switchToProcess(processOut.processID);
+					
+				}
+				else if(!q4.isEmpty()){
+					processOut = q4.remove();
+					processOut.lastQueue = 4; 
+					startedProcess = System.currentTimeMillis();
+					processExecution.switchToProcess(processOut.processID);
+				}
+				else if(!q5.isEmpty()){
+					processOut = q5.remove();
+					processOut.lastQueue = 5;
+					startedProcess = System.currentTimeMillis();
+					processExecution.switchToProcess(processOut.processID);
+				}
+				else if(!q6.isEmpty()){
+					
+					processOut = q6.remove();
+					processOut.lastQueue = 6; 
+					startedProcess = System.currentTimeMillis();
+					processExecution.switchToProcess(processOut.processID);
+				}
+			
+			else{
+				noProcessRunning = true;
+			}
+			break;
+			
+			
+			
 		default:
 			break;
 		}
@@ -297,54 +385,161 @@ public class  Scheduler implements Runnable  {
 
 	@Override
 	public void run() {
-		
-		switch(this.policy) {
-		
-		case RR:
-		
-		while(true){
-			try {
-				Thread.sleep(quantum);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		
-		//sofa aftur ef einhver process hefur verið startað aftur
-		while(System.currentTimeMillis() - startedProcess <= quantum){
 			
-			 try{
-				Thread.sleep(System.currentTimeMillis() - startedProcess);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		
-		//ProcessInfo i = processExecution.getProcessInfo(procID);
-		//System.out.println("Intertupr:" + procID);
-		//System.out.println("Need: " + i.totalServiceTime);
-		//System.out.println("finished: " + i.elapsedExecutionTime);
-		
-		q.add(procID);
+			//ProcessInfo i = processExecution.getProcessInfo(procID);
+			//System.out.println("Intertupr:" + procID);
+			//System.out.println("Need: " + i.totalServiceTime);
+			//System.out.println("finished: " + i.elapsedExecutionTime);
 			
-			if(!q.isEmpty()){
+			switch(this.policy) {
+			
+			case RR:
 				
-				procID = q.remove();
-				startedProcess = System.currentTimeMillis();
-				processExecution.switchToProcess(procID);
-			}
-			else{
-				noProcessRunning = true;
-			}
+				while(true){
+					try {
+						Thread.sleep(quantum);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					
+					//sofa aftur ef einhver process hefur verið startað aftur
+					while(System.currentTimeMillis() - startedProcess <= quantum){
+						
+						 try{
+							Thread.sleep(System.currentTimeMillis() - startedProcess);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					}
+					
+					q.add(procID); //fullt með mismuandi q
+					
+					if(!q.isEmpty()){ //fullt af línum að starta úr réttri q
+						
+						procID = q.remove();
+						startedProcess = System.currentTimeMillis();
+						processExecution.switchToProcess(procID);
+					}
+					else{
+						noProcessRunning = true;
+					}
+					
+					if(this.policy != Policy.RR){
+						return; 
+					}
 			
-			if(this.policy != Policy.RR){
-				return; 
+					break; 
 			}
-		}
-	
-		default:
-			break;
+					
+				
+					
+			case FB:
+				
+				while(true){
+					
+				System.out.println("While true");
+					try {
+						Thread.sleep(quantum);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					
+					//sofa aftur ef einhver process hefur verið startað aftur
+					while(System.currentTimeMillis() - startedProcess <= quantum){
+						
+						 try{
+							Thread.sleep(System.currentTimeMillis() - startedProcess);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					}
+					if(processOut.lastQueue == 0){
+						System.out.println("Add to queue 0");
+						q1.add(processOut);
+					}
+					else if(processOut.lastQueue == 1){
+						q2.add(processOut);
+					}
+					else if(processOut.lastQueue == 2){
+						q3.add(processOut);
+					}
+					else if(processOut.lastQueue == 3){	
+						q4.add(processOut);
+					}
+					else if(processOut.lastQueue == 4){
+						q5.add(processOut);
+					}
+					else if(processOut.lastQueue == 5){
+						q6.add(processOut);
+					}
+					else if(processOut.lastQueue == 6){
+						q6.add(processOut);
+					}
+					
+					if(!q0.isEmpty()){
+						System.out.println("remove");
+						processOut = q0.remove();
+						processOut.lastQueue = 0;
+						startedProcess = System.currentTimeMillis();
+						processExecution.switchToProcess(processOut.processID);
+					}
+					else if(!q1.isEmpty()){
+						
+						processOut = q1.remove();
+						processOut.lastQueue = 1;
+						startedProcess = System.currentTimeMillis();
+						processExecution.switchToProcess(processOut.processID);
+					}
+					else if(!q2.isEmpty()){
+						processOut = q2.remove();
+						processOut.lastQueue = 2; 
+						startedProcess = System.currentTimeMillis();
+						processExecution.switchToProcess(processOut.processID);
+
+					}
+					else if(!q3.isEmpty()){
+						processOut = q3.remove();
+						processOut.lastQueue = 3;
+						startedProcess = System.currentTimeMillis();
+						processExecution.switchToProcess(processOut.processID);
+						
+					}
+					else if(!q4.isEmpty()){
+						processOut = q4.remove();
+						processOut.lastQueue = 4; 
+						startedProcess = System.currentTimeMillis();
+						processExecution.switchToProcess(processOut.processID);
+					}
+					else if(!q5.isEmpty()){
+						processOut = q5.remove();
+						processOut.lastQueue = 5;
+						startedProcess = System.currentTimeMillis();
+						processExecution.switchToProcess(processOut.processID);
+					}
+					else if(!q6.isEmpty()){
+						
+						processOut = q6.remove();
+						processOut.lastQueue = 6; 
+						startedProcess = System.currentTimeMillis();
+						processExecution.switchToProcess(processOut.processID);
+					}
+					
+					else{
+						noProcessRunning = true;
+					}
+					
+					if(this.policy != Policy.FB){
+						return; 
+					}
+			
+					break;
+					
+				
+				}
+			default:
+				break;
 				
 			}
 		}	
-}
+	}
 
