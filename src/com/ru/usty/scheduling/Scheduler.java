@@ -13,6 +13,7 @@ public class  Scheduler implements Runnable  {
 	int procID; 
 	ProcessOnQueue processOut;
 	long startedProcess; 
+	boolean noProcessRunning = true;
 	
 	Queue<Integer> q = new LinkedList<Integer>();
 	PriorityQueue<ProcessOnQueue> queue = new PriorityQueue<ProcessOnQueue>(10, new Comparator<ProcessOnQueue>(){
@@ -30,7 +31,22 @@ public class  Scheduler implements Runnable  {
 				
 	}});
 	
-	boolean noProcessRunning = true;
+	PriorityQueue<ProcessOnQueue> queueSRT = new PriorityQueue<ProcessOnQueue>(10, new Comparator<ProcessOnQueue>(){
+		
+		@Override
+		public int compare(ProcessOnQueue p1, ProcessOnQueue p2){
+			
+			if((p1.totalService - p1.executing) < (p2.totalService - p2.executing)){
+				return -1;
+			}
+			if((p1.totalService - p1.executing) > (p2.totalService - p2.executing)){
+				return 1;
+			}
+			return 0;
+				
+	}});
+	
+	
 
 	/**
 	 * DO NOT CHANGE DEFINITION OF OPERATION
@@ -95,7 +111,6 @@ public class  Scheduler implements Runnable  {
 	 */
 	public void processAdded(int processID) {
 		
-
 		switch(this.policy) {
 		case FCFS:	
 			q.add(processID);
@@ -114,7 +129,6 @@ public class  Scheduler implements Runnable  {
 				processExecution.switchToProcess(procID); 
 				noProcessRunning = false;
 			}
-			
 			break;
 		case SPN:
 			
@@ -133,8 +147,50 @@ public class  Scheduler implements Runnable  {
 				noProcessRunning = false;
 			}
 			
-			break;
-		
+			break;	
+			
+		case SRT:
+			
+			ProcessInfo infoAdd = processExecution.getProcessInfo(processID);
+			ProcessOnQueue processAdd = new ProcessOnQueue();
+			processAdd.processID = processID;
+			processAdd.totalService = infoAdd.totalServiceTime;
+			processAdd.totalService = infoAdd.elapsedExecutionTime;
+			
+			//ef engin að keyra þá öddum við honum og setjum af stað
+			if(noProcessRunning == true){
+				processOut = processAdd;
+				processExecution.switchToProcess(processOut.processID); 
+				noProcessRunning = false;
+				
+			}
+			//annars athugum við á keyrandi process
+			else {
+				
+				ProcessInfo infoRun = processExecution.getProcessInfo(processOut.processID);
+				ProcessOnQueue processStopped = new ProcessOnQueue();
+				processStopped.processID = processOut.processID;
+				processStopped.executing = infoRun.elapsedExecutionTime;
+				processStopped.totalService = infoRun.totalServiceTime;
+				
+				if((infoAdd.totalServiceTime - infoAdd.elapsedExecutionTime) < (infoRun.totalServiceTime - infoRun.elapsedExecutionTime)){
+					
+					processOut = processAdd;
+					processExecution.switchToProcess(processOut.processID);
+					queueSRT.add(processStopped);
+					
+				}
+				else{
+					queueSRT.add(processAdd);
+					
+					if(noProcessRunning == true){
+						processOut = queueSRT.remove();
+						processExecution.switchToProcess(processAdd.processID); 
+						noProcessRunning = false;
+					}
+				}
+			}
+			
 		default:
 			break;
 		}
@@ -149,7 +205,6 @@ public class  Scheduler implements Runnable  {
 		case FCFS:	
 			if(!q.isEmpty()){
 				procID = q.remove();
-				startedProcess = System.currentTimeMillis();
 				processExecution.switchToProcess(procID);
 			}
 			else{
@@ -159,6 +214,7 @@ public class  Scheduler implements Runnable  {
 		case RR:
 			if(!q.isEmpty()){
 				procID = q.remove();
+				startedProcess = System.currentTimeMillis();
 				processExecution.switchToProcess(procID);
 			}
 			else{
@@ -175,6 +231,15 @@ public class  Scheduler implements Runnable  {
 				noProcessRunning = true;
 			}
 			break;
+		case SRT:
+			if(!queue.isEmpty()){
+				processOut = queueSRT.remove();
+				processExecution.switchToProcess(processOut.processID);
+			}
+			else{
+				noProcessRunning = true;
+			}
+			break;
 		default:
 			break;
 		}
@@ -184,6 +249,10 @@ public class  Scheduler implements Runnable  {
 
 	@Override
 	public void run() {
+		
+		switch(this.policy) {
+	
+		case RR:
 		
 		while(true){
 			try {
@@ -217,7 +286,24 @@ public class  Scheduler implements Runnable  {
 			if(this.policy != Policy.RR){
 				return; 
 			}
-		}	
-	}
+		}
+		case SRT:
+			
+			/*while(true){
+				
+				if(!queueSRT.isEmpty() && noProcessRunning == true){
+					System.out.println("hallo while");
+					processOut = queueSRT.remove();
+					processExecution.switchToProcess(processOut.processID);
+				}
+				if(this.policy != Policy.SRT){
+					return; 
+				}
+			}*/
+		default:
+			break;
+				
+			}
+	}	
 }
 
