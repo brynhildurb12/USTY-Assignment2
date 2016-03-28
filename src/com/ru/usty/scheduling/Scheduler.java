@@ -89,8 +89,7 @@ public class  Scheduler implements Runnable  {
 			break;
 		case SRT:	//Shortest remaining time
 			System.out.println("Starting new scheduling task: Shortest remaining time");
-			Thread threadSRT = new Thread(this);
-			threadSRT.start();
+			
 			break;
 		case HRRN:	//Highest response ratio next
 			System.out.println("Starting new scheduling task: Highest response ratio next");
@@ -291,18 +290,7 @@ public class  Scheduler implements Runnable  {
 				return; 
 			}
 		}
-		case SRT:
-			
-			while(true){
-				
-				if(!queueSRT.isEmpty() && noProcessRunning == true){
-					processOut = queueSRT.remove();
-					processExecution.switchToProcess(processOut.processID);
-				}
-				if(this.policy != Policy.SRT){
-					return; 
-				}
-			}
+	
 		default:
 			break;
 				
