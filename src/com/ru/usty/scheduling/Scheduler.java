@@ -144,6 +144,7 @@ public class  Scheduler implements Runnable  {
 				noProcessRunning = false;
 			}
 			
+			
 			break;
 		case SPN:
 			
@@ -249,8 +250,11 @@ public class  Scheduler implements Runnable  {
 			}
 			break;
 		case RR:
+			System.out.println("Process finished: " + procID);
+			
 			if(!q.isEmpty()){
 				procID = q.remove();
+				startedProcess = System.currentTimeMillis();
 				processExecution.switchToProcess(procID);
 			}
 			else{
@@ -305,15 +309,20 @@ public class  Scheduler implements Runnable  {
 				e.printStackTrace();
 			}
 		
-		//sofa aftur ef einhver hefur verið startað aftur
-		while(System.currentTimeMillis() - startedProcess < quantum){
+		//sofa aftur ef einhver process hefur verið startað aftur
+		while(System.currentTimeMillis() - startedProcess <= quantum){
 			
-			try {
+			 try{
 				Thread.sleep(System.currentTimeMillis() - startedProcess);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
+		
+		//ProcessInfo i = processExecution.getProcessInfo(procID);
+		//System.out.println("Intertupr:" + procID);
+		//System.out.println("Need: " + i.totalServiceTime);
+		//System.out.println("finished: " + i.elapsedExecutionTime);
 		
 		q.add(procID);
 			

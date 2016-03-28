@@ -48,11 +48,11 @@ public class TestSuite {
 	private static void initTestProcesses() {
 		testProcesses = new ArrayList<ProcessDescription>();
 
-		testProcesses.add(new ProcessDescription(0, 1500));
-		testProcesses.add(new ProcessDescription(1000, 3000));
-		testProcesses.add(new ProcessDescription(2000, 2000));
-		testProcesses.add(new ProcessDescription(3000, 2500));
-		testProcesses.add(new ProcessDescription(4000, 1000));
+		testProcesses.add(new ProcessDescription(0, 1500)); //0 - A
+		testProcesses.add(new ProcessDescription(1000, 3000)); //1 - B 
+		testProcesses.add(new ProcessDescription(2000, 2000)); // 2 - C
+		testProcesses.add(new ProcessDescription(3000, 2500));// 3 - D
+		testProcesses.add(new ProcessDescription(4000, 1000)); // 4 - E
 		testProcesses.add(new ProcessDescription(10500, 1000));
 		testProcesses.add(new ProcessDescription(10850, 4000));
 		testProcesses.add(new ProcessDescription(11500, 3000));
