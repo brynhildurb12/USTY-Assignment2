@@ -215,38 +215,18 @@ public class  Scheduler implements Runnable  {
 			
 			processAdd.processID = processID;
 			processAdd.totalService = infoAdding.totalServiceTime;
-			processAdd.executing = infoAdding.elapsedExecutionTime;
 			processAdd.waitingTime = infoAdding.elapsedWaitingTime;
+
+			queueHRRN.add(processAdd);
 			
 			if(noProcessRunning == true){
-				queueHRRN.add(processAdd);
 				processOut = queueHRRN.remove();
 				processExecution.switchToProcess(processOut.processID); 
 				noProcessRunning = false;
 			}
-			else{
-				
-				ProcessInfo infoRun = processExecution.getProcessInfo(processOut.processID);
-				System.out.println("Running: " + (infoRun.totalServiceTime - infoRun.elapsedExecutionTime));
-				System.out.println("Adding: " + (infoAdding.totalServiceTime - infoAdding.elapsedExecutionTime));
-				
-				if((infoRun.elapsedWaitingTime + infoRun.totalServiceTime)/infoRun.totalServiceTime > (infoAdding.elapsedWaitingTime + infoAdding.totalServiceTime)/infoAdding.totalServiceTime){
-					System.out.println("Swissa processum");
-					ProcessOnQueue processStopped = new ProcessOnQueue();
-					processStopped.processID = processOut.processID;
-					processStopped.totalService = infoAdding.totalServiceTime;
-					processStopped.executing = infoAdding.elapsedExecutionTime;
-					queueHRRN.add(processStopped);
-					processOut = processAdd;
-					processExecution.switchToProcess(processAdd.processID);
-				}
-				
-				else{
-					queueHRRN.add(processAdd);
-				}
-				
-			}
-			break;	
+			
+						
+		break;	
 		default:
 			break;
 		}
