@@ -143,7 +143,6 @@ public class  Scheduler implements Runnable  {
 			process.totalService = info.totalServiceTime;
 			
 			
-			
 				if(noProcessRunning == true){
 					queue.add(process);
 					processOut = queue.remove();
@@ -166,7 +165,6 @@ public class  Scheduler implements Runnable  {
 			processAdding.totalService = infoAdd.totalServiceTime;
 			processAdding.totalService = infoAdd.elapsedExecutionTime;
 			
-			
 			if(noProcessRunning == true){
 				queueSRT.add(processAdding);
 				processOut = queueSRT.remove();
@@ -180,7 +178,7 @@ public class  Scheduler implements Runnable  {
 				System.out.println("Adding: " + (infoAdd.totalServiceTime - infoAdd.elapsedExecutionTime));
 				
 				if((infoRun.totalServiceTime - infoRun.elapsedExecutionTime) > (infoAdd.totalServiceTime - infoAdd.elapsedExecutionTime)){
-					
+					System.out.println("Swissa processum");
 					ProcessOnQueue processStopped = new ProcessOnQueue();
 					processStopped.processID = processOut.processID;
 					processStopped.totalService = infoAdd.totalServiceTime;
@@ -188,12 +186,10 @@ public class  Scheduler implements Runnable  {
 					queueSRT.add(processStopped);
 					processOut = processAdding;
 					processExecution.switchToProcess(processAdding.processID);
-					
 				}
 				
 				else{
 					queueSRT.add(processAdding);
-					
 				}
 				
 			}
