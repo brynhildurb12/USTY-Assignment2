@@ -46,8 +46,21 @@ public class  Scheduler implements Runnable  {
 					
 		}});
 	
+	PriorityQueue<ProcessOnQueue> queueHRRN = new PriorityQueue<ProcessOnQueue>(10, new Comparator<ProcessOnQueue>(){
+		
+		@Override
+		public int compare(ProcessOnQueue p1, ProcessOnQueue p2){
+			
+			if((p1.waitingTime + p1.totalService)/p1.totalService > (p2.waitingTime + p2.totalService)/p2.totalService){
+				return -1;
+			}
+			if((p1.waitingTime + p1.totalService)/p1.totalService < (p2.waitingTime + p2.totalService)/p2.totalService){
+				return 1;
+			}
+			return 0;
+				
+	}});
 	
-
 	/**
 	 * DO NOT CHANGE DEFINITION OF OPERATION
 	 */
@@ -194,7 +207,46 @@ public class  Scheduler implements Runnable  {
 			}
 			break;	
 		
-		
+		case HRRN:
+			
+			ProcessInfo infoAdding = processExecution.getProcessInfo(processID);
+			
+			ProcessOnQueue processAdd = new ProcessOnQueue();
+			
+			processAdd.processID = processID;
+			processAdd.totalService = infoAdding.totalServiceTime;
+			processAdd.executing = infoAdding.elapsedExecutionTime;
+			processAdd.waitingTime = infoAdding.elapsedWaitingTime;
+			
+			if(noProcessRunning == true){
+				queueHRRN.add(processAdd);
+				processOut = queueHRRN.remove();
+				processExecution.switchToProcess(processOut.processID); 
+				noProcessRunning = false;
+			}
+			else{
+				
+				ProcessInfo infoRun = processExecution.getProcessInfo(processOut.processID);
+				System.out.println("Running: " + (infoRun.totalServiceTime - infoRun.elapsedExecutionTime));
+				System.out.println("Adding: " + (infoAdding.totalServiceTime - infoAdding.elapsedExecutionTime));
+				
+				if((infoRun.elapsedWaitingTime + infoRun.totalServiceTime)/infoRun.totalServiceTime > (infoAdding.elapsedWaitingTime + infoAdding.totalServiceTime)/infoAdding.totalServiceTime){
+					System.out.println("Swissa processum");
+					ProcessOnQueue processStopped = new ProcessOnQueue();
+					processStopped.processID = processOut.processID;
+					processStopped.totalService = infoAdding.totalServiceTime;
+					processStopped.executing = infoAdding.elapsedExecutionTime;
+					queueHRRN.add(processStopped);
+					processOut = processAdd;
+					processExecution.switchToProcess(processAdd.processID);
+				}
+				
+				else{
+					queueHRRN.add(processAdd);
+				}
+				
+			}
+			break;	
 		default:
 			break;
 		}
@@ -238,6 +290,15 @@ public class  Scheduler implements Runnable  {
 		case SRT:
 			if(!queueSRT.isEmpty()){
 				processOut = queueSRT.remove();
+				processExecution.switchToProcess(processOut.processID);
+			}
+			else{
+				noProcessRunning = true;
+			}
+			break;
+		case HRRN:
+			if(!queueHRRN.isEmpty()){
+				processOut = queueHRRN.remove();
 				processExecution.switchToProcess(processOut.processID);
 			}
 			else{
