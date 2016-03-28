@@ -180,15 +180,14 @@ public class  Scheduler implements Runnable  {
 				System.out.println("Adding: " + (infoAdd.totalServiceTime - infoAdd.elapsedExecutionTime));
 				
 				if((infoRun.totalServiceTime - infoRun.elapsedExecutionTime) > (infoAdd.totalServiceTime - infoAdd.elapsedExecutionTime)){
-					System.out.println("Swissa");
 					
 					ProcessOnQueue processStopped = new ProcessOnQueue();
-					processStopped.processID = processID;
+					processStopped.processID = processOut.processID;
 					processStopped.totalService = infoAdd.totalServiceTime;
 					processStopped.totalService = infoAdd.elapsedExecutionTime;
 					queueSRT.add(processStopped);
 					processOut = processAdding;
-					processExecution.switchToProcess(processOut.processID);
+					processExecution.switchToProcess(processAdding.processID);
 					
 				}
 				
