@@ -437,7 +437,7 @@ public class Scheduler implements Runnable  {
 				
 				while(true){
 					
-				System.out.println("While true");
+				//System.out.println("While true");
 					try {
 						Thread.sleep(quantum);
 					} catch (InterruptedException e) {
@@ -458,12 +458,15 @@ public class Scheduler implements Runnable  {
 						q1.add(processOut);
 					}
 					else if(processOut.lastQueue == 1){
+						System.out.println("Queue 1 - Process nr:" + processOut.processID);
 						q2.add(processOut);
 					}
 					else if(processOut.lastQueue == 2){
+						System.out.println("Queue 2 - Process nr:" + processOut.processID);
 						q3.add(processOut);
 					}
-					else if(processOut.lastQueue == 3){	
+					else if(processOut.lastQueue == 3){
+						System.out.println("Queue 3 - Process nr:" + processOut.processID);
 						q4.add(processOut);
 					}
 					else if(processOut.lastQueue == 4){
@@ -475,9 +478,11 @@ public class Scheduler implements Runnable  {
 					else if(processOut.lastQueue == 6){
 						q6.add(processOut);
 					}
-					
+					if(this.policy != Policy.FB){
+						return; 
+					}
 					if(!q0.isEmpty()){
-						System.out.println("remove");
+						System.out.println("remove" + processOut.processID);
 						processOut = q0.remove();
 						processOut.lastQueue = 0;
 						startedProcess = System.currentTimeMillis();
@@ -527,14 +532,10 @@ public class Scheduler implements Runnable  {
 					else{
 						noProcessRunning = true;
 					}
-					
-					if(this.policy != Policy.FB){
-						return; 
-					}
-			
-					break;
-					
-				
+
+
+
+					//break;
 				}
 			default:
 				break;
