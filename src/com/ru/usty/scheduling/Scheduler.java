@@ -11,9 +11,25 @@ public class  Scheduler implements Runnable  {
 	Policy policy;
 	int quantum; 
 	int procID; 
+	ProcessOnQueue processOut;
 	long startedProcess; 
 	
 	Queue<Integer> q = new LinkedList<Integer>();
+	PriorityQueue<ProcessOnQueue> queue = new PriorityQueue<ProcessOnQueue>(10, new Comparator<ProcessOnQueue>(){
+		
+		@Override
+		public int compare(ProcessOnQueue p1, ProcessOnQueue p2){
+			
+			if(p1.totalService < p2.totalService){
+				return -1;
+			}
+			if(p1.totalService > p2.totalService){
+				return 1;
+			}
+			return 0;
+				
+	}});
+	
 	boolean noProcessRunning = true;
 
 	/**
@@ -79,13 +95,48 @@ public class  Scheduler implements Runnable  {
 	 */
 	public void processAdded(int processID) {
 		
-		q.add(processID);
+
+		switch(this.policy) {
+		case FCFS:	
+			q.add(processID);
+			if(noProcessRunning == true){
+				procID = q.remove();
+				startedProcess = System.currentTimeMillis();
+				processExecution.switchToProcess(procID); 
+				noProcessRunning = false;
+			}
+			break;
+		case RR:
+			q.add(processID);
+			if(noProcessRunning == true){
+				procID = q.remove();
+				startedProcess = System.currentTimeMillis();
+				processExecution.switchToProcess(procID); 
+				noProcessRunning = false;
+			}
+			
+			break;
+		case SPN:
+			
+			ProcessInfo info = processExecution.getProcessInfo(processID);
+			
+			ProcessOnQueue process = new ProcessOnQueue();
+			
+			process.processID = processID;
+			process.totalService = info.totalServiceTime;
+			
+			queue.add(process);
+			
+				if(noProcessRunning == true){
+				processOut = queue.remove();
+				processExecution.switchToProcess(processOut.processID); 
+				noProcessRunning = false;
+			}
+			
+			break;
 		
-		if(noProcessRunning == true){
-			procID = q.remove();
-			startedProcess = System.currentTimeMillis();
-			processExecution.switchToProcess(procID); 
-			noProcessRunning = false;
+		default:
+			break;
 		}
 	}
 
@@ -94,14 +145,41 @@ public class  Scheduler implements Runnable  {
 	 */ 
 	public void processFinished(int processID) {
 		
-		if(!q.isEmpty()){
-			procID = q.remove();
-			startedProcess = System.currentTimeMillis();
-			processExecution.switchToProcess(procID);
+		switch(this.policy) {
+		case FCFS:	
+			if(!q.isEmpty()){
+				procID = q.remove();
+				startedProcess = System.currentTimeMillis();
+				processExecution.switchToProcess(procID);
+			}
+			else{
+				noProcessRunning = true;
+			}
+			break;
+		case RR:
+			if(!q.isEmpty()){
+				procID = q.remove();
+				processExecution.switchToProcess(procID);
+			}
+			else{
+				noProcessRunning = true;
+			}
+			
+			break;
+		case SPN:
+			if(!queue.isEmpty()){
+				processOut = queue.remove();
+				processExecution.switchToProcess(processOut.processID);
+			}
+			else{
+				noProcessRunning = true;
+			}
+			break;
+		default:
+			break;
 		}
-		else{
-			noProcessRunning = true;
-		}
+		
+		
 	}
 
 	@Override
