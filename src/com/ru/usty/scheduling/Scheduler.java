@@ -36,10 +36,10 @@ public class  Scheduler implements Runnable  {
 			@Override
 			public int compare(ProcessOnQueue p1, ProcessOnQueue p2){
 				
-				if((p1.totalService - p1.executing) > (p2.totalService - p2.executing)){
+				if((p1.totalService - p1.executing) < (p2.totalService - p2.executing)){
 					return -1;
 				}
-				if((p1.totalService - p1.executing) < (p2.totalService - p2.executing)){
+				if((p1.totalService - p1.executing) > (p2.totalService - p2.executing)){
 					return 1;
 				}
 				return 0;
@@ -163,7 +163,7 @@ public class  Scheduler implements Runnable  {
 			
 			processAdding.processID = processID;
 			processAdding.totalService = infoAdd.totalServiceTime;
-			processAdding.totalService = infoAdd.elapsedExecutionTime;
+			processAdding.executing = infoAdd.elapsedExecutionTime;
 			
 			if(noProcessRunning == true){
 				queueSRT.add(processAdding);
@@ -182,7 +182,7 @@ public class  Scheduler implements Runnable  {
 					ProcessOnQueue processStopped = new ProcessOnQueue();
 					processStopped.processID = processOut.processID;
 					processStopped.totalService = infoAdd.totalServiceTime;
-					processStopped.totalService = infoAdd.elapsedExecutionTime;
+					processStopped.executing = infoAdd.elapsedExecutionTime;
 					queueSRT.add(processStopped);
 					processOut = processAdding;
 					processExecution.switchToProcess(processAdding.processID);
