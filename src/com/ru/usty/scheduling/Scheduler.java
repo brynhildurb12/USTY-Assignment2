@@ -7,10 +7,15 @@ import java.util.*;
 
 public class Scheduler implements Runnable  {
 
+	
+	
 	ProcessExecution processExecution;
 	Policy policy;
 	int quantum;
 	int procID; 
+	//FBQueue fbqueue;
+	Queue<ProcessOnQueue> allFBQueues[];
+	
 	//long FCFSRespone = 0; 
 	//int FCFSCount = 0; 
 	//long AverageFCFS = 0; 
@@ -18,14 +23,15 @@ public class Scheduler implements Runnable  {
 	long startedProcess; 
 	boolean noProcessRunning = true;
 	//Seven queues for FeedBack
-	Queue<ProcessOnQueue> q0 = new LinkedList<ProcessOnQueue>();
-	Queue<ProcessOnQueue> q1 = new LinkedList<ProcessOnQueue>();
+	
+
+	/*Queue<ProcessOnQueue> q1 = new LinkedList<ProcessOnQueue>();
 	Queue<ProcessOnQueue> q2 = new LinkedList<ProcessOnQueue>();
 	Queue<ProcessOnQueue> q3 = new LinkedList<ProcessOnQueue>();
 	Queue<ProcessOnQueue> q4 = new LinkedList<ProcessOnQueue>();
 	Queue<ProcessOnQueue> q5 = new LinkedList<ProcessOnQueue>();
-	Queue<ProcessOnQueue> q6 = new LinkedList<ProcessOnQueue>();
-	
+	Queue<ProcessOnQueue> q6 = new LinkedList<ProcessOnQueue>();*/
+
 	Queue<Integer> q = new LinkedList<Integer>();
 	PriorityQueue<ProcessOnQueue> queue = new PriorityQueue<ProcessOnQueue>(10, new Comparator<ProcessOnQueue>(){
 		
@@ -113,7 +119,6 @@ public class Scheduler implements Runnable  {
 			break;
 		case SRT:	//Shortest remaining time
 			System.out.println("Starting new scheduling task: Shortest remaining time");
-			
 			break;
 		case HRRN:	//Highest response ratio next
 			System.out.println("Starting new scheduling task: Highest response ratio next");
@@ -121,6 +126,11 @@ public class Scheduler implements Runnable  {
 			break;
 		case FB:	//Feedback
 			System.out.println("Starting new scheduling task: Feedback, quantum = " + quantum);
+			allFBQueues = new Queue[7];
+			for(int i = 0; i < 7; i++){
+				allFBQueues[i] = new LinkedList<ProcessOnQueue>();
+				System.out.println(i);
+			}
 			Thread threadFB = new Thread(this);
 			threadFB.start();
 			break;
@@ -239,11 +249,11 @@ public class Scheduler implements Runnable  {
 			
 			firstTime.processID = processID;
 			firstTime.lastQueue = 0; 
-		
-			q0.add(firstTime);
+			
+			allFBQueues[0].add(firstTime);
 			
 			if(noProcessRunning == true){
-				processOut = q0.remove();
+				processOut = allFBQueues[0].remove();
 				startedProcess = System.currentTimeMillis();
 				processExecution.switchToProcess(processOut.processID); 
 				noProcessRunning = false;
@@ -322,61 +332,61 @@ public class Scheduler implements Runnable  {
 			break;
 		case FB:
 				//System.out.println("remove");
-				if(!q0.isEmpty()){
-					System.out.println("remove");
-					processOut = q0.remove();
-					processOut.lastQueue = 0;
-					startedProcess = System.currentTimeMillis();
-					processExecution.switchToProcess(processOut.processID);
-				}
-				else if(!q1.isEmpty()){
-					
-					processOut = q1.remove();
-					processOut.lastQueue = 1;
-					startedProcess = System.currentTimeMillis();
-					processExecution.switchToProcess(processOut.processID);
-				}
-				else if(!q2.isEmpty()){
-					processOut = q2.remove();
-					processOut.lastQueue = 2; 
-					startedProcess = System.currentTimeMillis();
-					processExecution.switchToProcess(processOut.processID);
-
-				}
-				else if(!q3.isEmpty()){
-					processOut = q3.remove();
-					processOut.lastQueue = 3;
-					startedProcess = System.currentTimeMillis();
-					processExecution.switchToProcess(processOut.processID);
-					
-				}
-				else if(!q4.isEmpty()){
-					processOut = q4.remove();
-					processOut.lastQueue = 4; 
-					startedProcess = System.currentTimeMillis();
-					processExecution.switchToProcess(processOut.processID);
-				}
-				else if(!q5.isEmpty()){
-					processOut = q5.remove();
-					processOut.lastQueue = 5;
-					startedProcess = System.currentTimeMillis();
-					processExecution.switchToProcess(processOut.processID);
-				}
-				else if(!q6.isEmpty()){
-					
-					processOut = q6.remove();
-					processOut.lastQueue = 6; 
-					startedProcess = System.currentTimeMillis();
-					processExecution.switchToProcess(processOut.processID);
-				}
+			if(!allFBQueues[0].isEmpty()){
+				
+				System.out.println("remove" + processOut.processID);
+				processOut = allFBQueues[0].remove();
+				processOut.lastQueue = 0;
+				startedProcess = System.currentTimeMillis();
+				processExecution.switchToProcess(processOut.processID);
+			}
+			else if(!allFBQueues[1].isEmpty()){
+				
+				processOut = allFBQueues[1].remove();
+				processOut.lastQueue = 1;
+				startedProcess = System.currentTimeMillis();
+				processExecution.switchToProcess(processOut.processID);
+			}
+			else if(!allFBQueues[2].isEmpty()){
+				
+				processOut = allFBQueues[2].remove();
+				processOut.lastQueue = 2; 
+				startedProcess = System.currentTimeMillis();
+				processExecution.switchToProcess(processOut.processID);
+			}
+			else if(!allFBQueues[3].isEmpty()){
+				
+				processOut = allFBQueues[3].remove();
+				processOut.lastQueue = 3;
+				startedProcess = System.currentTimeMillis();
+				processExecution.switchToProcess(processOut.processID);		
+			}
+			else if(!allFBQueues[4].isEmpty()){
+				
+				processOut = allFBQueues[4].remove();
+				processOut.lastQueue = 4; 
+				startedProcess = System.currentTimeMillis();
+				processExecution.switchToProcess(processOut.processID);
+			}
+			else if(!allFBQueues[5].isEmpty()){
+				
+				processOut = allFBQueues[5].remove();
+				processOut.lastQueue = 5;
+				startedProcess = System.currentTimeMillis();
+				processExecution.switchToProcess(processOut.processID);
+			}
+			else if(!allFBQueues[6].isEmpty()){
+				
+				processOut = allFBQueues[6].remove();
+				processOut.lastQueue = 6; 
+				startedProcess = System.currentTimeMillis();
+				processExecution.switchToProcess(processOut.processID);
+			}
 			
 			else{
 				noProcessRunning = true;
 			}
-			break;
-			
-			
-			
+			break;	
 		default:
 			break;
 		}
@@ -453,89 +463,99 @@ public class Scheduler implements Runnable  {
 							e.printStackTrace();
 						}
 					}
-					if(processOut.lastQueue == 0){
+					
+					//This code for array queue instead of the one commented below?
+					if(processOut.lastQueue < 6){
+						allFBQueues[processOut.lastQueue+1].add(processOut);
+					}
+					else if (processOut.lastQueue == 6){
+						allFBQueues[6].add(processOut);
+					}
+					
+					/*if(processOut.lastQueue == 0){
 						System.out.println("Add to queue 0");
-						q1.add(processOut);
+						allFBQueues[1].add(processOut);
 					}
 					else if(processOut.lastQueue == 1){
 						System.out.println("Queue 1 - Process nr:" + processOut.processID);
-						q2.add(processOut);
+						allFBQueues[2].add(processOut);
 					}
 					else if(processOut.lastQueue == 2){
 						System.out.println("Queue 2 - Process nr:" + processOut.processID);
-						q3.add(processOut);
+						allFBQueues[3].add(processOut);
 					}
 					else if(processOut.lastQueue == 3){
 						System.out.println("Queue 3 - Process nr:" + processOut.processID);
-						q4.add(processOut);
+						allFBQueues[4].add(processOut);
 					}
 					else if(processOut.lastQueue == 4){
-						q5.add(processOut);
+						allFBQueues[5].add(processOut);
 					}
 					else if(processOut.lastQueue == 5){
-						q6.add(processOut);
+						allFBQueues[6].add(processOut);
 					}
 					else if(processOut.lastQueue == 6){
-						q6.add(processOut);
-					}
+						allFBQueues[6].add(processOut);
+					}*/
+					
 					if(this.policy != Policy.FB){
 						return; 
 					}
-					if(!q0.isEmpty()){
+					
+					if(!allFBQueues[0].isEmpty()){
+						
 						System.out.println("remove" + processOut.processID);
-						processOut = q0.remove();
+						processOut = allFBQueues[0].remove();
 						processOut.lastQueue = 0;
 						startedProcess = System.currentTimeMillis();
 						processExecution.switchToProcess(processOut.processID);
 					}
-					else if(!q1.isEmpty()){
+					else if(!allFBQueues[1].isEmpty()){
 						
-						processOut = q1.remove();
+						processOut = allFBQueues[1].remove();
 						processOut.lastQueue = 1;
 						startedProcess = System.currentTimeMillis();
 						processExecution.switchToProcess(processOut.processID);
 					}
-					else if(!q2.isEmpty()){
-						processOut = q2.remove();
+					else if(!allFBQueues[2].isEmpty()){
+						
+						processOut = allFBQueues[2].remove();
 						processOut.lastQueue = 2; 
 						startedProcess = System.currentTimeMillis();
 						processExecution.switchToProcess(processOut.processID);
 
 					}
-					else if(!q3.isEmpty()){
-						processOut = q3.remove();
+					else if(!allFBQueues[3].isEmpty()){
+						
+						processOut = allFBQueues[3].remove();
 						processOut.lastQueue = 3;
 						startedProcess = System.currentTimeMillis();
-						processExecution.switchToProcess(processOut.processID);
-						
+						processExecution.switchToProcess(processOut.processID);	
 					}
-					else if(!q4.isEmpty()){
-						processOut = q4.remove();
+					else if(!allFBQueues[4].isEmpty()){
+						
+						processOut = allFBQueues[4].remove();
 						processOut.lastQueue = 4; 
 						startedProcess = System.currentTimeMillis();
 						processExecution.switchToProcess(processOut.processID);
 					}
-					else if(!q5.isEmpty()){
-						processOut = q5.remove();
+					else if(!allFBQueues[5].isEmpty()){
+						
+						processOut = allFBQueues[5].remove();
 						processOut.lastQueue = 5;
 						startedProcess = System.currentTimeMillis();
 						processExecution.switchToProcess(processOut.processID);
 					}
-					else if(!q6.isEmpty()){
+					else if(!allFBQueues[6].isEmpty()){
 						
-						processOut = q6.remove();
+						processOut = allFBQueues[6].remove();
 						processOut.lastQueue = 6; 
 						startedProcess = System.currentTimeMillis();
 						processExecution.switchToProcess(processOut.processID);
-					}
-					
+					}					
 					else{
 						noProcessRunning = true;
 					}
-
-
-
-					//break;
 				}
 			default:
 				break;
@@ -543,4 +563,3 @@ public class Scheduler implements Runnable  {
 			}
 		}	
 	}
-
