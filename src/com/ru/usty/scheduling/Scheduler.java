@@ -22,15 +22,9 @@ public class Scheduler implements Runnable  {
 	ProcessOnQueue processOut;
 	long startedProcess; 
 	boolean noProcessRunning = true;
-	//Seven queues for FeedBack
-	
-
-	/*Queue<ProcessOnQueue> q1 = new LinkedList<ProcessOnQueue>();
-	Queue<ProcessOnQueue> q2 = new LinkedList<ProcessOnQueue>();
-	Queue<ProcessOnQueue> q3 = new LinkedList<ProcessOnQueue>();
-	Queue<ProcessOnQueue> q4 = new LinkedList<ProcessOnQueue>();
-	Queue<ProcessOnQueue> q5 = new LinkedList<ProcessOnQueue>();
-	Queue<ProcessOnQueue> q6 = new LinkedList<ProcessOnQueue>();*/
+	long [] arriving = new long[14];
+	long [] finished = new long[14];
+	long [] starting = new long[14];
 
 	Queue<Integer> q = new LinkedList<Integer>();
 	PriorityQueue<ProcessOnQueue> queue = new PriorityQueue<ProcessOnQueue>(10, new Comparator<ProcessOnQueue>(){
@@ -146,7 +140,11 @@ public class Scheduler implements Runnable  {
 	 */
 	public void processAdded(int processID) {
 		
-
+		
+		arriving[processID] = System.currentTimeMillis();
+	
+		
+		
 		switch(this.policy) {
 		case FCFS:	
 			q.add(processID);
@@ -155,6 +153,9 @@ public class Scheduler implements Runnable  {
 				startedProcess = System.currentTimeMillis();
 				processExecution.switchToProcess(procID); 
 				noProcessRunning = false;
+				if(starting[processID] == 0){
+					starting[processID] = System.currentTimeMillis();
+				}
 			}
 			break;
 		case RR:
@@ -255,6 +256,7 @@ public class Scheduler implements Runnable  {
 			if(noProcessRunning == true){
 				processOut = allFBQueues[0].remove();
 				startedProcess = System.currentTimeMillis();
+				
 				processExecution.switchToProcess(processOut.processID); 
 				noProcessRunning = false;
 			}
@@ -269,6 +271,8 @@ public class Scheduler implements Runnable  {
 	 * DO NOT CHANGE DEFINITION OF OPERATION
 	 */ 
 	public void processFinished(int processID) {
+		
+		finished[processID] = System.currentTimeMillis();
 		
 		switch(this.policy) {
 		case FCFS:	
