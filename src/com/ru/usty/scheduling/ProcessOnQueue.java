@@ -6,4 +6,10 @@ public class ProcessOnQueue {
 	long waitingTime;
 	long executing; 
 	long totalService;
+	int lastQueue; 
+	
+	public ProcessOnQueue(){
+		
+	}
+	
 }
