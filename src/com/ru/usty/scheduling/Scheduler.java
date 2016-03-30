@@ -25,6 +25,8 @@ public class Scheduler implements Runnable  {
 	long[] starting = new long[15];
 	int processCount = 0;
 
+	Thread threadRR;
+	
 	Queue<Integer> q = new LinkedList<Integer>();
 	PriorityQueue<ProcessOnQueue> queue = new PriorityQueue<ProcessOnQueue>(10, new Comparator<ProcessOnQueue>(){
 
@@ -115,11 +117,17 @@ public class Scheduler implements Runnable  {
 		case RR:	//Round robin
 			System.out.println("Starting new scheduling task: Round robin, quantum = " + quantum);
 
-			Thread thread = new Thread(this);
-			thread.start();
+			threadRR = new Thread(this);
+			threadRR.start();
 
 			break;
 		case SPN:	//Shortest process next
+			try {
+				threadRR.join();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			System.out.println("Starting new scheduling task: Shortest process next");
 
 			break;
