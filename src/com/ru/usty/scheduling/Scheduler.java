@@ -107,6 +107,8 @@ public class Scheduler implements Runnable  {
 		averageTurnaroundTime = 0;
 		processCount = 0;
 		
+		noProcessRunning = true;
+				
 		switch(policy) {
 		case FCFS:	//First-come-first-served
 			System.out.println("Starting new scheduling task: First-come-first-served");
@@ -136,7 +138,7 @@ public class Scheduler implements Runnable  {
 			allFBQueues = new Queue[7];
 			for(int i = 0; i < 7; i++){
 				allFBQueues[i] = new LinkedList<ProcessOnQueue>();
-				System.out.println(i);
+				//System.out.println(i);
 			}
 			Thread threadFB = new Thread(this);
 			threadFB.start();
@@ -186,7 +188,6 @@ public class Scheduler implements Runnable  {
 			}
 			break;
 		case SPN:
-
 			ProcessInfo info = processExecution.getProcessInfo(processID);
 			ProcessOnQueue process = new ProcessOnQueue();
 			process.processID = processID;
@@ -197,11 +198,11 @@ public class Scheduler implements Runnable  {
 				processOut = queue.remove();
 				processExecution.switchToProcess(processOut.processID); 
 				noProcessRunning = false;
+				starting[processOut.processID] = System.currentTimeMillis();
 			}
 			else{
 				queue.add(process);
 			}
-
 			break;
 		case SRT:
 
@@ -216,15 +217,16 @@ public class Scheduler implements Runnable  {
 				processOut = queueSRT.remove();
 				processExecution.switchToProcess(processOut.processID); 
 				noProcessRunning = false;
+				starting[processOut.processID] = System.currentTimeMillis();
 			}
 			else{
 
 				ProcessInfo infoRun = processExecution.getProcessInfo(processOut.processID);
-				System.out.println("Running: " + (infoRun.totalServiceTime - infoRun.elapsedExecutionTime));
-				System.out.println("Adding: " + (infoAdd.totalServiceTime - infoAdd.elapsedExecutionTime));
+				//System.out.println("Running: " + (infoRun.totalServiceTime - infoRun.elapsedExecutionTime));
+				//System.out.println("Adding: " + (infoAdd.totalServiceTime - infoAdd.elapsedExecutionTime));
 
 				if((infoRun.totalServiceTime - infoRun.elapsedExecutionTime) > (infoAdd.totalServiceTime - infoAdd.elapsedExecutionTime)){
-					System.out.println("Swissa processum");
+					//System.out.println("Swissa processum");
 					ProcessOnQueue processStopped = new ProcessOnQueue();
 					processStopped.processID = processOut.processID;
 					processStopped.totalService = infoAdd.totalServiceTime;
@@ -232,6 +234,9 @@ public class Scheduler implements Runnable  {
 					queueSRT.add(processStopped);
 					processOut = processAdding;
 					processExecution.switchToProcess(processAdding.processID);
+					if(starting[processAdding.processID] == 0){
+						starting[processAdding.processID] = System.currentTimeMillis();
+					}
 				}
 
 				else{
@@ -253,6 +258,7 @@ public class Scheduler implements Runnable  {
 			if(noProcessRunning == true){
 				processOut = queueHRRN.remove();
 				processExecution.switchToProcess(processOut.processID); 
+				starting[processOut.processID] = System.currentTimeMillis();
 				noProcessRunning = false;
 			}
 
@@ -270,9 +276,11 @@ public class Scheduler implements Runnable  {
 			if(noProcessRunning == true){
 				processOut = allFBQueues[0].remove();
 				startedProcess = System.currentTimeMillis();
-
 				processExecution.switchToProcess(processOut.processID); 
 				noProcessRunning = false;
+				if(starting[processOut.processID] == 0){
+					starting[processOut.processID] = System.currentTimeMillis();
+				}
 			}
 			break;
 		default:
@@ -318,7 +326,7 @@ public class Scheduler implements Runnable  {
 
 			break;
 		case RR:
-			System.out.println("Process finished: " + procID);
+			//System.out.println("Process finished: " + procID);
 
 			if(!q.isEmpty()){
 				procID = q.remove();
@@ -341,44 +349,81 @@ public class Scheduler implements Runnable  {
 				System.out.println("Average Response Time: " + averageResponseTime);
 				System.out.println("Average Turnaround Time: " + averageTurnaroundTime);
 			}
-
 			break;
 		case SPN:
 			if(!queue.isEmpty()){
 				processOut = queue.remove();
 				processExecution.switchToProcess(processOut.processID);
+				starting[processOut.processID] = System.currentTimeMillis();
 			}
 			else{
 				noProcessRunning = true;
+			}
+			if(processCount == 15){
+				for(int i = 0; i< processCount; i++){
+					totalResponseTime += (starting[i] - arriving[i]);
+					totalTurnaroundTime += (finished[i] - arriving[i]);
+				}
+				averageResponseTime = (totalResponseTime/15);
+				averageTurnaroundTime = (totalTurnaroundTime/15);
+				System.out.println("Average Response Time: " + averageResponseTime);
+				System.out.println("Average Turnaround Time: " + averageTurnaroundTime);
 			}
 			break;
 		case SRT:
 			if(!queueSRT.isEmpty()){
 				processOut = queueSRT.remove();
 				processExecution.switchToProcess(processOut.processID);
+				if(starting[processOut.processID] == 0){
+					starting[processOut.processID] = System.currentTimeMillis();
+				}
 			}
 			else{
 				noProcessRunning = true;
+			}
+			if(processCount == 15){
+				for(int i = 0; i< processCount; i++){
+					totalResponseTime += (starting[i] - arriving[i]);
+					totalTurnaroundTime += (finished[i] - arriving[i]);
+				}
+				averageResponseTime = (totalResponseTime/15);
+				averageTurnaroundTime = (totalTurnaroundTime/15);
+				System.out.println("Average Response Time: " + averageResponseTime);
+				System.out.println("Average Turnaround Time: " + averageTurnaroundTime);
 			}
 			break;
 		case HRRN:
 			if(!queueHRRN.isEmpty()){
 				processOut = queueHRRN.remove();
 				processExecution.switchToProcess(processOut.processID);
+				starting[processOut.processID] = System.currentTimeMillis();
 			}
 			else{
 				noProcessRunning = true;
 			}
+			if(processCount == 15){
+				for(int i = 0; i< processCount; i++){
+					totalResponseTime += (starting[i] - arriving[i]);
+					totalTurnaroundTime += (finished[i] - arriving[i]);
+				}
+				averageResponseTime = (totalResponseTime/15);
+				averageTurnaroundTime = (totalTurnaroundTime/15);
+				System.out.println("Average Response Time: " + averageResponseTime);
+				System.out.println("Average Turnaround Time: " + averageTurnaroundTime);
+			}
 			break;
 		case FB:
-			//System.out.println("remove");
+			//System.out.println("Process finishing: " + processID);
 			if(!allFBQueues[0].isEmpty()){
 
-				System.out.println("remove" + processOut.processID);
+				//System.out.println("remove" + processOut.processID);
 				processOut = allFBQueues[0].remove();
 				processOut.lastQueue = 0;
 				startedProcess = System.currentTimeMillis();
 				processExecution.switchToProcess(processOut.processID);
+				if(starting[processOut.processID] == 0){
+					starting[processOut.processID] = System.currentTimeMillis();
+				}
 			}
 			else if(!allFBQueues[1].isEmpty()){
 
@@ -425,6 +470,16 @@ public class Scheduler implements Runnable  {
 
 			else{
 				noProcessRunning = true;
+			}
+			if(processCount == 15){
+				for(int i = 0; i< processCount; i++){
+					totalResponseTime += (starting[i] - arriving[i]);
+					totalTurnaroundTime += (finished[i] - arriving[i]);
+				}
+				averageResponseTime = (totalResponseTime/15);
+				averageTurnaroundTime = (totalTurnaroundTime/15);
+				System.out.println("Average Response Time: " + averageResponseTime);
+				System.out.println("Average Turnaround Time: " + averageTurnaroundTime);
 			}
 			break;	
 		default:
@@ -491,16 +546,20 @@ public class Scheduler implements Runnable  {
 				}
 			}
 		case FB:
+			
 			while(true){
+				long lastProcessStarted = 0;
 				//System.out.println("While true");
 				try {
+					lastProcessStarted = startedProcess;
 					Thread.sleep(quantum);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
 
 				//sofa aftur ef einhver process hefur verið startað aftur
-				while(System.currentTimeMillis() - startedProcess <= quantum){
+				if((lastProcessStarted != startedProcess) && (System.currentTimeMillis() - startedProcess <= quantum) && (System.currentTimeMillis() - startedProcess != 0)){
+				//while(System.currentTimeMillis() - startedProcess <= quantum){
 
 					try{
 						Thread.sleep(System.currentTimeMillis() - startedProcess);
@@ -549,11 +608,14 @@ public class Scheduler implements Runnable  {
 
 				if(!allFBQueues[0].isEmpty()){
 
-					System.out.println("remove" + processOut.processID);
+					//System.out.println("remove" + processOut.processID);
 					processOut = allFBQueues[0].remove();
 					processOut.lastQueue = 0;
 					startedProcess = System.currentTimeMillis();
 					processExecution.switchToProcess(processOut.processID);
+					if(starting[processOut.processID] == 0){
+						starting[processOut.processID] = System.currentTimeMillis();
+					}
 				}
 				else if(!allFBQueues[1].isEmpty()){
 
