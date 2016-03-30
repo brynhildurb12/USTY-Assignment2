@@ -26,6 +26,7 @@ public class Scheduler implements Runnable  {
 	int processCount = 0;
 
 	Thread threadRR;
+	boolean oneThreadRR = true;
 	
 	Queue<Integer> q = new LinkedList<Integer>();
 	PriorityQueue<ProcessOnQueue> queue = new PriorityQueue<ProcessOnQueue>(10, new Comparator<ProcessOnQueue>(){
@@ -116,9 +117,12 @@ public class Scheduler implements Runnable  {
 			break;
 		case RR:	//Round robin
 			System.out.println("Starting new scheduling task: Round robin, quantum = " + quantum);
-
-			threadRR = new Thread(this);
-			threadRR.start();
+			
+			if(oneThreadRR){
+				threadRR = new Thread(this);
+				threadRR.start();
+			}
+			oneThreadRR = false;
 
 			break;
 		case SPN:	//Shortest process next
@@ -349,7 +353,7 @@ public class Scheduler implements Runnable  {
 				System.out.println("Average Response Time: " + averageResponseTime);
 				System.out.println("Average Turnaround Time: " + averageTurnaroundTime);
 			}
-
+			
 			break;
 		case SPN:
 			if(!queue.isEmpty()){
