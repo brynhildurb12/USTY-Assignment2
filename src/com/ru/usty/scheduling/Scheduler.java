@@ -7,37 +7,30 @@ import java.util.*;
 
 public class Scheduler implements Runnable  {
 
-	
-	
 	ProcessExecution processExecution;
 	Policy policy;
 	int quantum;
 	int procID; 
 	//FBQueue fbqueue;
 	Queue<ProcessOnQueue> allFBQueues[];
-	
-	//long FCFSRespone = 0; 
-	//int FCFSCount = 0; 
-	//long AverageFCFS = 0; 
+	long totalResponseTime = 0;
+	long totalTurnaroundTime = 0;
+	long averageResponseTime = 0;
+	long averageTurnaroundTime = 0;
 	ProcessOnQueue processOut;
 	long startedProcess; 
 	boolean noProcessRunning = true;
-	//Seven queues for FeedBack
-	
-
-	/*Queue<ProcessOnQueue> q1 = new LinkedList<ProcessOnQueue>();
-	Queue<ProcessOnQueue> q2 = new LinkedList<ProcessOnQueue>();
-	Queue<ProcessOnQueue> q3 = new LinkedList<ProcessOnQueue>();
-	Queue<ProcessOnQueue> q4 = new LinkedList<ProcessOnQueue>();
-	Queue<ProcessOnQueue> q5 = new LinkedList<ProcessOnQueue>();
-	Queue<ProcessOnQueue> q6 = new LinkedList<ProcessOnQueue>();*/
+	long[] arriving = new long[15];
+	long[] finished = new long[15];
+	long[] starting = new long[15];
+	int processCount = 0;
 
 	Queue<Integer> q = new LinkedList<Integer>();
 	PriorityQueue<ProcessOnQueue> queue = new PriorityQueue<ProcessOnQueue>(10, new Comparator<ProcessOnQueue>(){
-		
+
 		@Override
 		public int compare(ProcessOnQueue p1, ProcessOnQueue p2){
-			
+
 			if(p1.totalService < p2.totalService){
 				return -1;
 			}
@@ -45,29 +38,29 @@ public class Scheduler implements Runnable  {
 				return 1;
 			}
 			return 0;
-				
-	}});
-	
-	PriorityQueue<ProcessOnQueue> queueSRT = new PriorityQueue<ProcessOnQueue>(10, new Comparator<ProcessOnQueue>(){
-			
-			@Override
-			public int compare(ProcessOnQueue p1, ProcessOnQueue p2){
-				
-				if((p1.totalService - p1.executing) < (p2.totalService - p2.executing)){
-					return -1;
-				}
-				if((p1.totalService - p1.executing) > (p2.totalService - p2.executing)){
-					return 1;
-				}
-				return 0;
-					
+
 		}});
-	
-	PriorityQueue<ProcessOnQueue> queueHRRN = new PriorityQueue<ProcessOnQueue>(10, new Comparator<ProcessOnQueue>(){
-		
+
+	PriorityQueue<ProcessOnQueue> queueSRT = new PriorityQueue<ProcessOnQueue>(10, new Comparator<ProcessOnQueue>(){
+
 		@Override
 		public int compare(ProcessOnQueue p1, ProcessOnQueue p2){
-			
+
+			if((p1.totalService - p1.executing) < (p2.totalService - p2.executing)){
+				return -1;
+			}
+			if((p1.totalService - p1.executing) > (p2.totalService - p2.executing)){
+				return 1;
+			}
+			return 0;
+
+		}});
+
+	PriorityQueue<ProcessOnQueue> queueHRRN = new PriorityQueue<ProcessOnQueue>(10, new Comparator<ProcessOnQueue>(){
+
+		@Override
+		public int compare(ProcessOnQueue p1, ProcessOnQueue p2){
+
 			if((p1.waitingTime + p1.totalService)/p1.totalService > (p2.waitingTime + p2.totalService)/p2.totalService){
 				return -1;
 			}
@@ -75,9 +68,9 @@ public class Scheduler implements Runnable  {
 				return 1;
 			}
 			return 0;
-				
-	}});
-	
+
+		}});
+
 	/**
 	 * DO NOT CHANGE DEFINITION OF OPERATION
 	 */
@@ -96,33 +89,47 @@ public class Scheduler implements Runnable  {
 
 		this.policy = policy;
 		this.quantum = quantum;
-		
+
 		/**
 		 * Add general initialization code here (if needed)
 		 */
-
+		//Initialize arrays that manage arrival, starting and finished time
+		for(int i = 0; i <= 14; i++){
+			arriving[i] = 0;
+			finished[i] = 0;
+			starting[i] = 0;	
+		}
+		
+		//Set all timer variables to zero for new policy
+		totalResponseTime = 0;
+		totalTurnaroundTime = 0;
+		averageResponseTime = 0;
+		averageTurnaroundTime = 0;
+		processCount = 0;
+		
 		switch(policy) {
 		case FCFS:	//First-come-first-served
 			System.out.println("Starting new scheduling task: First-come-first-served");
-			
+
 			break;
 		case RR:	//Round robin
 			System.out.println("Starting new scheduling task: Round robin, quantum = " + quantum);
-			
+
 			Thread thread = new Thread(this);
 			thread.start();
-			
+
 			break;
 		case SPN:	//Shortest process next
 			System.out.println("Starting new scheduling task: Shortest process next");
-			
+
 			break;
 		case SRT:	//Shortest remaining time
 			System.out.println("Starting new scheduling task: Shortest remaining time");
+
 			break;
 		case HRRN:	//Highest response ratio next
 			System.out.println("Starting new scheduling task: Highest response ratio next");
-			
+	
 			break;
 		case FB:	//Feedback
 			System.out.println("Starting new scheduling task: Feedback, quantum = " + quantum);
@@ -133,6 +140,7 @@ public class Scheduler implements Runnable  {
 			}
 			Thread threadFB = new Thread(this);
 			threadFB.start();
+
 			break;
 		}
 
@@ -145,16 +153,24 @@ public class Scheduler implements Runnable  {
 	 * DO NOT CHANGE DEFINITION OF OPERATION
 	 */
 	public void processAdded(int processID) {
-		
+
+
+		arriving[processID] = System.currentTimeMillis();
 
 		switch(this.policy) {
 		case FCFS:	
 			q.add(processID);
 			if(noProcessRunning == true){
 				procID = q.remove();
-				startedProcess = System.currentTimeMillis();
+				//Er þetta ekki óþarfi í FCFS? Við þurfum ekki að halda utan um þennan tíma, er þetta ekki bara notað í tímamælingunum?
+				//	startedProcess = System.currentTimeMillis();
 				processExecution.switchToProcess(procID); 
+				starting[procID] = System.currentTimeMillis();
 				noProcessRunning = false;
+				//Held að þetta sé óþarfi í FCFS þar sem allir processar eiga að klára strax og fari því aldrei aftur á röðina
+				/*if(starting[processID] == 0){
+					starting[processID] = System.currentTimeMillis();
+				}*/
 			}
 			break;
 		case RR:
@@ -164,37 +180,37 @@ public class Scheduler implements Runnable  {
 				startedProcess = System.currentTimeMillis();
 				processExecution.switchToProcess(procID); 
 				noProcessRunning = false;
+				if(starting[processID] == 0){
+					starting[processID] = System.currentTimeMillis();
+				}
 			}
-			
-			
 			break;
 		case SPN:
-			
+
 			ProcessInfo info = processExecution.getProcessInfo(processID);
 			ProcessOnQueue process = new ProcessOnQueue();
 			process.processID = processID;
 			process.totalService = info.totalServiceTime;
-			
-				if(noProcessRunning == true){
-					queue.add(process);
-					processOut = queue.remove();
-					processExecution.switchToProcess(processOut.processID); 
-					noProcessRunning = false;
-				}
-				else{
-					queue.add(process);
-				}
-			
+
+			if(noProcessRunning == true){
+				queue.add(process);
+				processOut = queue.remove();
+				processExecution.switchToProcess(processOut.processID); 
+				noProcessRunning = false;
+			}
+			else{
+				queue.add(process);
+			}
+
 			break;
-			
 		case SRT:
-			
+
 			ProcessInfo infoAdd = processExecution.getProcessInfo(processID);
 			ProcessOnQueue processAdding = new ProcessOnQueue();
 			processAdding.processID = processID;
 			processAdding.totalService = infoAdd.totalServiceTime;
 			processAdding.executing = infoAdd.elapsedExecutionTime;
-			
+
 			if(noProcessRunning == true){
 				queueSRT.add(processAdding);
 				processOut = queueSRT.remove();
@@ -202,11 +218,11 @@ public class Scheduler implements Runnable  {
 				noProcessRunning = false;
 			}
 			else{
-				
+
 				ProcessInfo infoRun = processExecution.getProcessInfo(processOut.processID);
 				System.out.println("Running: " + (infoRun.totalServiceTime - infoRun.elapsedExecutionTime));
 				System.out.println("Adding: " + (infoAdd.totalServiceTime - infoAdd.elapsedExecutionTime));
-				
+
 				if((infoRun.totalServiceTime - infoRun.elapsedExecutionTime) > (infoAdd.totalServiceTime - infoAdd.elapsedExecutionTime)){
 					System.out.println("Swissa processum");
 					ProcessOnQueue processStopped = new ProcessOnQueue();
@@ -217,16 +233,15 @@ public class Scheduler implements Runnable  {
 					processOut = processAdding;
 					processExecution.switchToProcess(processAdding.processID);
 				}
-				
+
 				else{
 					queueSRT.add(processAdding);
 				}
-				
+
 			}
 			break;	
-		
 		case HRRN:
-			
+
 			ProcessInfo infoAdding = processExecution.getProcessInfo(processID);
 			ProcessOnQueue processAdd = new ProcessOnQueue();
 			processAdd.processID = processID;
@@ -234,32 +249,32 @@ public class Scheduler implements Runnable  {
 			processAdd.waitingTime = infoAdding.elapsedWaitingTime;
 
 			queueHRRN.add(processAdd);
-			
+
 			if(noProcessRunning == true){
 				processOut = queueHRRN.remove();
 				processExecution.switchToProcess(processOut.processID); 
 				noProcessRunning = false;
 			}
-			
-						
-		break;	
+
+
+			break;	
 		case FB:
-			
+
 			ProcessOnQueue firstTime = new ProcessOnQueue();
-			
+
 			firstTime.processID = processID;
 			firstTime.lastQueue = 0; 
-			
+
 			allFBQueues[0].add(firstTime);
-			
+
 			if(noProcessRunning == true){
 				processOut = allFBQueues[0].remove();
 				startedProcess = System.currentTimeMillis();
+
 				processExecution.switchToProcess(processOut.processID); 
 				noProcessRunning = false;
 			}
 			break;
-			
 		default:
 			break;
 		}
@@ -269,39 +284,64 @@ public class Scheduler implements Runnable  {
 	 * DO NOT CHANGE DEFINITION OF OPERATION
 	 */ 
 	public void processFinished(int processID) {
-		
+
+		finished[processID] = System.currentTimeMillis();
+		processCount++;
+
 		switch(this.policy) {
 		case FCFS:	
-			
-			//ProcessInfo infoFCFS = processExecution.getProcessInfo(processID);
-			
-			//FCFSRespone += infoFCFS.elapsedWaitingTime;
-			//FCFSCount++;
-			//AverageFCFS = FCFSRespone/FCFSCount;
-			
-			//System.out.println(AverageFCFS);
-					
+
 			if(!q.isEmpty()){
 				procID = q.remove();
-				startedProcess = System.currentTimeMillis();
+				//Er þetta ekki óþarfi í FCFS? Við þurfum ekki að halda utan um þennan tíma, er þetta ekki bara notað í tímamælingunum?
+				//startedProcess = System.currentTimeMillis();
 				processExecution.switchToProcess(procID);
+				starting[procID] = System.currentTimeMillis();
+				//Held að þetta sé óþarfi í FCFS þar sem allir processar eiga að klára strax og fari því aldrei aftur á röðina
+				/*if(starting[procID] == 0){
+					starting[procID] = System.currentTimeMillis();
+				}*/
 			}
 			else{
 				noProcessRunning = true;
 			}
+			if(processCount == 15){
+				for(int i = 0; i<processCount ; i++){
+					totalResponseTime += (starting[i] - arriving[i]);
+					totalTurnaroundTime += (finished[i] - starting[i]);
+				}
+				averageResponseTime = (totalResponseTime/14);
+				averageTurnaroundTime = (totalTurnaroundTime/14);
+				System.out.println("Average Response Time: " + averageResponseTime);
+				System.out.println("Average Turnaround Time: " + averageTurnaroundTime);
+			}
+
 			break;
 		case RR:
-			//System.out.println("Process finished: " + procID);
-					
+			System.out.println("Process finished: " + procID);
+
 			if(!q.isEmpty()){
 				procID = q.remove();
 				startedProcess = System.currentTimeMillis();
 				processExecution.switchToProcess(procID);
+				if(starting[procID] == 0){
+					starting[procID] = System.currentTimeMillis();
+				}
 			}
 			else{
 				noProcessRunning = true;
 			}
-			
+			if(processCount == 15){
+				for(int i = 0; i< processCount; i++){
+					totalResponseTime += (starting[i] - arriving[i]);
+					totalTurnaroundTime += (finished[i] - starting[i]);
+				}
+				averageResponseTime = (totalResponseTime/14);
+				averageTurnaroundTime = (totalTurnaroundTime/14);
+				System.out.println("Average Response Time: " + averageResponseTime);
+				System.out.println("Average Turnaround Time: " + averageTurnaroundTime);
+			}
+
 			break;
 		case SPN:
 			if(!queue.isEmpty()){
@@ -331,9 +371,9 @@ public class Scheduler implements Runnable  {
 			}
 			break;
 		case FB:
-				//System.out.println("remove");
+			//System.out.println("remove");
 			if(!allFBQueues[0].isEmpty()){
-				
+
 				System.out.println("remove" + processOut.processID);
 				processOut = allFBQueues[0].remove();
 				processOut.lastQueue = 0;
@@ -341,48 +381,48 @@ public class Scheduler implements Runnable  {
 				processExecution.switchToProcess(processOut.processID);
 			}
 			else if(!allFBQueues[1].isEmpty()){
-				
+
 				processOut = allFBQueues[1].remove();
 				processOut.lastQueue = 1;
 				startedProcess = System.currentTimeMillis();
 				processExecution.switchToProcess(processOut.processID);
 			}
 			else if(!allFBQueues[2].isEmpty()){
-				
+
 				processOut = allFBQueues[2].remove();
 				processOut.lastQueue = 2; 
 				startedProcess = System.currentTimeMillis();
 				processExecution.switchToProcess(processOut.processID);
 			}
 			else if(!allFBQueues[3].isEmpty()){
-				
+
 				processOut = allFBQueues[3].remove();
 				processOut.lastQueue = 3;
 				startedProcess = System.currentTimeMillis();
 				processExecution.switchToProcess(processOut.processID);		
 			}
 			else if(!allFBQueues[4].isEmpty()){
-				
+
 				processOut = allFBQueues[4].remove();
 				processOut.lastQueue = 4; 
 				startedProcess = System.currentTimeMillis();
 				processExecution.switchToProcess(processOut.processID);
 			}
 			else if(!allFBQueues[5].isEmpty()){
-				
+
 				processOut = allFBQueues[5].remove();
 				processOut.lastQueue = 5;
 				startedProcess = System.currentTimeMillis();
 				processExecution.switchToProcess(processOut.processID);
 			}
 			else if(!allFBQueues[6].isEmpty()){
-				
+
 				processOut = allFBQueues[6].remove();
 				processOut.lastQueue = 6; 
 				startedProcess = System.currentTimeMillis();
 				processExecution.switchToProcess(processOut.processID);
 			}
-			
+
 			else{
 				noProcessRunning = true;
 			}
@@ -390,89 +430,94 @@ public class Scheduler implements Runnable  {
 		default:
 			break;
 		}
-		
+
 	}
 
 	@Override
 	public void run() {
-			
-			//ProcessInfo i = processExecution.getProcessInfo(procID);
-			//System.out.println("Intertupr:" + procID);
-			//System.out.println("Need: " + i.totalServiceTime);
-			//System.out.println("finished: " + i.elapsedExecutionTime);
-			
-			switch(this.policy) {
-			
-			case RR:
-				
-				while(true){
-					try {
-						Thread.sleep(quantum);
+
+		//ProcessInfo i = processExecution.getProcessInfo(procID);
+		//System.out.println("Intertupr:" + procID);
+		//System.out.println("Need: " + i.totalServiceTime);
+		//System.out.println("finished: " + i.elapsedExecutionTime);
+
+		switch(this.policy) {
+		case RR:
+			while(true){
+				long lastProcessStarted = 0;
+				try {
+					lastProcessStarted = startedProcess;
+					//System.out.println("Thread sleeps at: " + System.currentTimeMillis());
+					Thread.sleep(quantum);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				//System.out.println("Thread wakes up at: " + System.currentTimeMillis());
+
+				/*Það var alltaf verið að fara inní þetta while, sama þó að enginn process hafi verið að klára 
+				 * í sleepinu. Kári talaði einhvers staðar um að halda utan um tímann á síðasta process sem startaði 
+				 * og gera eitthvað ef sá tími væri ekki sá sami þegar þráðurinn vaknaði. 
+				 * Þess vegna setti ég þessa IF setningu og þetta virðist virka. 
+				 * Processarnir eru reyndar ekki að klára í réttri röð frekar en fyrri daginn :(
+				 */
+				//sofa aftur ef einhver process hefur verið startað aftur
+				if((lastProcessStarted != startedProcess) && (System.currentTimeMillis() - startedProcess <= quantum) && (System.currentTimeMillis() - startedProcess != 0)){
+					//while(System.currentTimeMillis() - startedProcess <= quantum){
+
+					//System.out.println("How often does this happen?");
+					try{
+						Thread.sleep(System.currentTimeMillis() - startedProcess);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
-					
-					//sofa aftur ef einhver process hefur verið startað aftur
-					while(System.currentTimeMillis() - startedProcess <= quantum){
-						
-						 try{
-							Thread.sleep(System.currentTimeMillis() - startedProcess);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
+				}
+				//}
+				q.add(procID); //fullt með mismuandi q
+
+				if(!q.isEmpty()){ //fullt af línum að starta úr réttri q
+					procID = q.remove();
+					startedProcess = System.currentTimeMillis();
+					processExecution.switchToProcess(procID);
+					if(starting[procID] == 0){
+						starting[procID] = System.currentTimeMillis();
 					}
-					
-					q.add(procID); //fullt með mismuandi q
-					
-					if(!q.isEmpty()){ //fullt af línum að starta úr réttri q
-						
-						procID = q.remove();
-						startedProcess = System.currentTimeMillis();
-						processExecution.switchToProcess(procID);
-					}
-					else{
-						noProcessRunning = true;
-					}
-					
-					if(this.policy != Policy.RR){
-						return; 
-					}
-			
-					break; 
+				}
+				else{
+					noProcessRunning = true;
+				}
+
+				if(this.policy != Policy.RR){
+					return; 
+				}
 			}
-					
-				
-					
-			case FB:
-				
-				while(true){
-					
+		case FB:
+			while(true){
 				//System.out.println("While true");
-					try {
-						Thread.sleep(quantum);
+				try {
+					Thread.sleep(quantum);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+
+				//sofa aftur ef einhver process hefur verið startað aftur
+				while(System.currentTimeMillis() - startedProcess <= quantum){
+
+					try{
+						Thread.sleep(System.currentTimeMillis() - startedProcess);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
-					
-					//sofa aftur ef einhver process hefur verið startað aftur
-					while(System.currentTimeMillis() - startedProcess <= quantum){
-						
-						 try{
-							Thread.sleep(System.currentTimeMillis() - startedProcess);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-					}
-					
-					//This code for array queue instead of the one commented below?
-					if(processOut.lastQueue < 6){
-						allFBQueues[processOut.lastQueue+1].add(processOut);
-					}
-					else if (processOut.lastQueue == 6){
-						allFBQueues[6].add(processOut);
-					}
-					
-					/*if(processOut.lastQueue == 0){
+				}
+
+				//This code for array queue instead of the one commented below?
+				if(processOut.lastQueue < 6){
+					allFBQueues[processOut.lastQueue+1].add(processOut);
+				}
+				else if (processOut.lastQueue == 6){
+					allFBQueues[6].add(processOut);
+				}
+
+				/*if(processOut.lastQueue == 0){
 						System.out.println("Add to queue 0");
 						allFBQueues[1].add(processOut);
 					}
@@ -497,69 +542,69 @@ public class Scheduler implements Runnable  {
 					else if(processOut.lastQueue == 6){
 						allFBQueues[6].add(processOut);
 					}*/
-					
-					if(this.policy != Policy.FB){
-						return; 
-					}
-					
-					if(!allFBQueues[0].isEmpty()){
-						
-						System.out.println("remove" + processOut.processID);
-						processOut = allFBQueues[0].remove();
-						processOut.lastQueue = 0;
-						startedProcess = System.currentTimeMillis();
-						processExecution.switchToProcess(processOut.processID);
-					}
-					else if(!allFBQueues[1].isEmpty()){
-						
-						processOut = allFBQueues[1].remove();
-						processOut.lastQueue = 1;
-						startedProcess = System.currentTimeMillis();
-						processExecution.switchToProcess(processOut.processID);
-					}
-					else if(!allFBQueues[2].isEmpty()){
-						
-						processOut = allFBQueues[2].remove();
-						processOut.lastQueue = 2; 
-						startedProcess = System.currentTimeMillis();
-						processExecution.switchToProcess(processOut.processID);
 
-					}
-					else if(!allFBQueues[3].isEmpty()){
-						
-						processOut = allFBQueues[3].remove();
-						processOut.lastQueue = 3;
-						startedProcess = System.currentTimeMillis();
-						processExecution.switchToProcess(processOut.processID);	
-					}
-					else if(!allFBQueues[4].isEmpty()){
-						
-						processOut = allFBQueues[4].remove();
-						processOut.lastQueue = 4; 
-						startedProcess = System.currentTimeMillis();
-						processExecution.switchToProcess(processOut.processID);
-					}
-					else if(!allFBQueues[5].isEmpty()){
-						
-						processOut = allFBQueues[5].remove();
-						processOut.lastQueue = 5;
-						startedProcess = System.currentTimeMillis();
-						processExecution.switchToProcess(processOut.processID);
-					}
-					else if(!allFBQueues[6].isEmpty()){
-						
-						processOut = allFBQueues[6].remove();
-						processOut.lastQueue = 6; 
-						startedProcess = System.currentTimeMillis();
-						processExecution.switchToProcess(processOut.processID);
-					}					
-					else{
-						noProcessRunning = true;
-					}
+				if(this.policy != Policy.FB){
+					return; 
 				}
-			default:
-				break;
-				
+
+				if(!allFBQueues[0].isEmpty()){
+
+					System.out.println("remove" + processOut.processID);
+					processOut = allFBQueues[0].remove();
+					processOut.lastQueue = 0;
+					startedProcess = System.currentTimeMillis();
+					processExecution.switchToProcess(processOut.processID);
+				}
+				else if(!allFBQueues[1].isEmpty()){
+
+					processOut = allFBQueues[1].remove();
+					processOut.lastQueue = 1;
+					startedProcess = System.currentTimeMillis();
+					processExecution.switchToProcess(processOut.processID);
+				}
+				else if(!allFBQueues[2].isEmpty()){
+
+					processOut = allFBQueues[2].remove();
+					processOut.lastQueue = 2; 
+					startedProcess = System.currentTimeMillis();
+					processExecution.switchToProcess(processOut.processID);
+
+				}
+				else if(!allFBQueues[3].isEmpty()){
+
+					processOut = allFBQueues[3].remove();
+					processOut.lastQueue = 3;
+					startedProcess = System.currentTimeMillis();
+					processExecution.switchToProcess(processOut.processID);	
+				}
+				else if(!allFBQueues[4].isEmpty()){
+
+					processOut = allFBQueues[4].remove();
+					processOut.lastQueue = 4; 
+					startedProcess = System.currentTimeMillis();
+					processExecution.switchToProcess(processOut.processID);
+				}
+				else if(!allFBQueues[5].isEmpty()){
+
+					processOut = allFBQueues[5].remove();
+					processOut.lastQueue = 5;
+					startedProcess = System.currentTimeMillis();
+					processExecution.switchToProcess(processOut.processID);
+				}
+				else if(!allFBQueues[6].isEmpty()){
+
+					processOut = allFBQueues[6].remove();
+					processOut.lastQueue = 6; 
+					startedProcess = System.currentTimeMillis();
+					processExecution.switchToProcess(processOut.processID);
+				}					
+				else{
+					noProcessRunning = true;
+				}
 			}
-		}	
-	}
+		default:
+			break;
+
+		}
+	}	
+}
