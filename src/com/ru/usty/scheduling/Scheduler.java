@@ -11,13 +11,15 @@ public class Scheduler implements Runnable  {
 	Policy policy;
 	int quantum;
 	int procID; 
-	//FBQueue fbqueue;
-	Queue<ProcessOnQueue> allFBQueues[];
+
 	long totalResponseTime = 0;
 	long totalTurnaroundTime = 0;
 	long averageResponseTime = 0;
 	long averageTurnaroundTime = 0;
+	
+	Queue<ProcessOnQueue> allFBQueues[];
 	ProcessOnQueue processOut;
+	
 	long startedProcess; 
 	boolean noProcessRunning = true;
 	long[] arriving = new long[15];
@@ -28,7 +30,10 @@ public class Scheduler implements Runnable  {
 	Thread threadRR;
 	boolean oneThreadRR = true;
 	
-	Queue<Integer> q = new LinkedList<Integer>();
+	//Queues for each policy
+	Queue<Integer> queueFCFS = new LinkedList<Integer>();
+	Queue<Integer> queueRR = new LinkedList<Integer>();
+	
 	PriorityQueue<ProcessOnQueue> queue = new PriorityQueue<ProcessOnQueue>(10, new Comparator<ProcessOnQueue>(){
 
 		@Override
@@ -171,9 +176,9 @@ public class Scheduler implements Runnable  {
 
 		switch(this.policy) {
 		case FCFS:	
-			q.add(processID);
+			queueFCFS.add(processID);
 			if(noProcessRunning == true){
-				procID = q.remove();
+				procID = queueFCFS.remove();
 				//Er þetta ekki óþarfi í FCFS? Við þurfum ekki að halda utan um þennan tíma, er þetta ekki bara notað í tímamælingunum?
 				//	startedProcess = System.currentTimeMillis();
 				processExecution.switchToProcess(procID); 
@@ -186,9 +191,9 @@ public class Scheduler implements Runnable  {
 			}
 			break;
 		case RR:
-			q.add(processID);
+			queueRR.add(processID);
 			if(noProcessRunning == true){
-				procID = q.remove();
+				procID = queueRR.remove();
 				startedProcess = System.currentTimeMillis();
 				processExecution.switchToProcess(procID); 
 				noProcessRunning = false;
@@ -303,8 +308,8 @@ public class Scheduler implements Runnable  {
 		switch(this.policy) {
 		case FCFS:	
 
-			if(!q.isEmpty()){
-				procID = q.remove();
+			if(!queueFCFS.isEmpty()){
+				procID = queueFCFS.remove();
 				//Er þetta ekki óþarfi í FCFS? Við þurfum ekki að halda utan um þennan tíma, er þetta ekki bara notað í tímamælingunum?
 				//startedProcess = System.currentTimeMillis();
 				processExecution.switchToProcess(procID);
@@ -332,8 +337,8 @@ public class Scheduler implements Runnable  {
 		case RR:
 			System.out.println("Process finished: " + procID);
 
-			if(!q.isEmpty()){
-				procID = q.remove();
+			if(!queueRR.isEmpty()){
+				procID = queueRR.remove();
 				startedProcess = System.currentTimeMillis();
 				processExecution.switchToProcess(procID);
 				if(starting[procID] == 0){
@@ -484,10 +489,10 @@ public class Scheduler implements Runnable  {
 					}
 				}
 				//}
-				q.add(procID); //fullt með mismuandi q
+				queueRR.add(procID); //fullt með mismuandi q
 
-				if(!q.isEmpty()){ //fullt af línum að starta úr réttri q
-					procID = q.remove();
+				if(!queueRR.isEmpty()){ //fullt af línum að starta úr réttri q
+					procID = queueRR.remove();
 					startedProcess = System.currentTimeMillis();
 					processExecution.switchToProcess(procID);
 					if(starting[procID] == 0){
