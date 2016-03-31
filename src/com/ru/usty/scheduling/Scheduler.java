@@ -340,17 +340,6 @@ public class Scheduler implements Runnable  {
 			
 			if(processCount == 15){
 				calculateTime ();
-				System.out.println("After calculate");
-				for(int i = 0; i<processCount ; i++){
-					
-					totalResponseTime += (starting[i] - arriving[i]);
-					totalTurnaroundTime += (finished[i] - arriving[i]);
-				}
-				
-				averageResponseTime = (totalResponseTime/15);
-				averageTurnaroundTime = (totalTurnaroundTime/15);
-				System.out.println("Average Response Time: " + averageResponseTime);
-				System.out.println("Average Turnaround Time: " + averageTurnaroundTime);
 			}
 
 			break;
@@ -370,18 +359,7 @@ public class Scheduler implements Runnable  {
 				noProcessRunning = true;
 			}
 			if(processCount == 15){
-				calculateTime ();
-				System.out.println("After calculate");
-				for(int i = 0; i<processCount ; i++){
-					
-					totalResponseTime += (starting[i] - arriving[i]);
-					totalTurnaroundTime += (finished[i] - arriving[i]);
-				}
-				
-				averageResponseTime = (totalResponseTime/15);
-				averageTurnaroundTime = (totalTurnaroundTime/15);
-				System.out.println("Average Response Time: " + averageResponseTime);
-				System.out.println("Average Turnaround Time: " + averageTurnaroundTime);
+				calculateTime();
 			}	
 			
 			break;
@@ -398,17 +376,6 @@ public class Scheduler implements Runnable  {
 			}
 			if(processCount == 15){
 				calculateTime ();
-				System.out.println("After calculate");
-				for(int i = 0; i< processCount; i++){
-					
-					totalResponseTime += (starting[i] - arriving[i]);
-					totalTurnaroundTime += (finished[i] - arriving[i]);
-				}
-				
-				averageResponseTime = (totalResponseTime/15);
-				averageTurnaroundTime = (totalTurnaroundTime/15);
-				System.out.println("Average Response Time: " + averageResponseTime);
-				System.out.println("Average Turnaround Time: " + averageTurnaroundTime);
 			}
 			
 			break;
@@ -428,17 +395,6 @@ public class Scheduler implements Runnable  {
 			}
 			if(processCount == 15){
 				calculateTime ();
-				System.out.println("After calculate");
-				for(int i = 0; i< processCount; i++){
-					
-					totalResponseTime += (starting[i] - arriving[i]);
-					totalTurnaroundTime += (finished[i] - arriving[i]);
-				}
-				
-				averageResponseTime = (totalResponseTime/15);
-				averageTurnaroundTime = (totalTurnaroundTime/15);
-				System.out.println("Average Response Time: " + averageResponseTime);
-				System.out.println("Average Turnaround Time: " + averageTurnaroundTime);
 			}
 			
 			break;
@@ -455,17 +411,6 @@ public class Scheduler implements Runnable  {
 			}
 			if(processCount == 15){
 				calculateTime ();
-				System.out.println("After calculate");
-				for(int i = 0; i< processCount; i++){
-					
-					totalResponseTime += (starting[i] - arriving[i]);
-					totalTurnaroundTime += (finished[i] - arriving[i]);
-				}
-				
-				averageResponseTime = (totalResponseTime/15);
-				averageTurnaroundTime = (totalTurnaroundTime/15);
-				System.out.println("Average Response Time: " + averageResponseTime);
-				System.out.println("Average Turnaround Time: " + averageTurnaroundTime);
 			}
 			
 			break;
@@ -529,17 +474,6 @@ public class Scheduler implements Runnable  {
 			}
 			if(processCount == 15){
 				calculateTime ();
-				System.out.println("After calculate");
-				for(int i = 0; i< processCount; i++){
-					
-					totalResponseTime += (starting[i] - arriving[i]);
-					totalTurnaroundTime += (finished[i] - arriving[i]);
-				}
-				
-				averageResponseTime = (totalResponseTime/15);
-				averageTurnaroundTime = (totalTurnaroundTime/15);
-				System.out.println("Average Response Time: " + averageResponseTime);
-				System.out.println("Average Turnaround Time: " + averageTurnaroundTime);
 			}
 			break;	
 		default:
