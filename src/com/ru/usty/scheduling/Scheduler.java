@@ -496,13 +496,14 @@ public class Scheduler implements Runnable  {
 				}
 				
 				//Sleep again if another process has been started
-				while(System.currentTimeMillis() - startedProcess <= quantum){
-
+				long timeToSleepAgain = (quantum - (System.currentTimeMillis() - startedProcess));
+				while((System.currentTimeMillis() - startedProcess) <= quantum){
 					try{
-						Thread.sleep(System.currentTimeMillis() - startedProcess);
+						Thread.sleep(timeToSleepAgain);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
+					timeToSleepAgain = (quantum - (System.currentTimeMillis() - startedProcess));
 				}
 
 				queueRR.add(procID);
@@ -537,13 +538,14 @@ public class Scheduler implements Runnable  {
 				}
 
 				//Sleep again if another process has been started
-				while(System.currentTimeMillis() - startedProcess <= quantum){
-
+				long timeToSleepAgain = (quantum - (System.currentTimeMillis() - startedProcess));
+				while((System.currentTimeMillis() - startedProcess) <= quantum){
 					try{
-						Thread.sleep(System.currentTimeMillis() - startedProcess);
+						Thread.sleep(timeToSleepAgain);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
+					timeToSleepAgain = (quantum - (System.currentTimeMillis() - startedProcess));
 				}
 
 				//Switch to the next queue
